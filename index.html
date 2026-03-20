@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>UAFT • KUTO mobile v1</title>
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --panel:#14151b;
+      --panel-2:#1a1d26;
+      --line:#262a33;
+      --text:#e7e9f1;
+      --muted:#8b90a1;
+      --accent:#3d7bff;
+      --ok:#2cc26b;
+      --warn:#f1c40f;
+      --bad:#ff5252;
+      --paid:#f0d271;
+      --shadow:0 12px 30px rgba(0,0,0,.32);
+      --radius:18px;
+      --radius-sm:12px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#09090d 0%,#0b0b10 100%);
+      color:var(--text);
+      font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    }
+    button,input,select{font:inherit}
+    .app{
+      width:min(100%, 760px);
+      margin:0 auto;
+      padding:calc(var(--safe-top) + 14px) 12px calc(var(--safe-bottom) + 24px);
+    }
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      margin:0 -12px 12px;
+      padding:calc(var(--safe-top) + 12px) 12px 12px;
+      backdrop-filter: blur(16px);
+      background:rgba(11,11,15,.9);
+      border-bottom:1px solid rgba(38,42,51,.9);
+    }
+    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .title-wrap h1{margin:0;font-size:24px;line-height:1.05;letter-spacing:.2px}
+    .title-wrap p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 10px;border-radius:999px;background:var(--panel);
+      border:1px solid var(--line);color:var(--muted);font-size:12px;white-space:nowrap;
+    }
+    .section{
+      background:linear-gradient(180deg,rgba(20,21,27,.98),rgba(15,17,24,.98));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      margin-bottom:12px;
+      overflow:hidden;
+    }
+    .section-head{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:14px 14px 0;
+    }
+    .section-head h2,.section-head h3{margin:0;font-size:16px}
+    .section-sub{color:var(--muted);font-size:12px}
+    .controls,
+    .list,
+    .detail,
+    .matrix-wrap,
+    .footer-actions{padding:14px}
+    .actions-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      padding:14px;
+    }
+    .actions-grid .full{grid-column:1/-1}
+    .btn{
+      min-height:46px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      background:#1f2330;
+      color:#fff;
+      cursor:pointer;
+      transition:transform .06s ease, opacity .15s ease;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-green{background:#2cc26b;border-color:#21a356;color:#071108;font-weight:700}
+    .btn-blue{background:var(--accent);border-color:#2457d3}
+    .btn-ghost{background:var(--panel-2)}
+    .btn-danger{background:#32161a;border-color:#5b1f27;color:#ffd3d8}
+    .btn-small{min-height:38px;padding:9px 12px;border-radius:12px;font-size:14px}
+    .btn[disabled]{opacity:.45;cursor:default}
+    .filters-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field.full{grid-column:1/-1}
+    .label{font-size:12px;color:var(--muted)}
+    .input,
+    .select,
+    .search{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:var(--panel);
+      color:var(--text);
+      padding:10px 12px;
+      outline:none;
+    }
+    .search-row{display:grid;grid-template-columns:1fr auto;gap:10px}
+    .summary-strip{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:0 14px 14px;
+      color:var(--muted);font-size:13px;
+    }
+    .student-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(23,25,33,.98);
+      padding:12px;
+      margin-bottom:10px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .student-card.active{border-color:#3c63c6;box-shadow:0 0 0 1px rgba(61,123,255,.28) inset}
+    .student-top{
+      display:grid;
+      grid-template-columns:auto 52px minmax(0,1fr) auto;
+      gap:10px;
+      align-items:center;
+    }
+    .toggle{
+      width:42px;height:24px;border-radius:999px;border:1px solid var(--line);background:#2a2f3a;position:relative;cursor:pointer;flex:0 0 auto;
+    }
+    .toggle::after{
+      content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s ease;
+    }
+    .toggle.on{background:var(--accent)}
+    .toggle.on::after{transform:translateX(18px)}
+    .avatar{
+      width:52px;height:52px;border-radius:50%;overflow:hidden;background:#2a2f3a;display:grid;place-items:center;flex:0 0 auto;
+      border:1px solid #333847;
+    }
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .avatar span{font-weight:700}
+    .name-wrap{min-width:0}
+    .name{
+      margin:0;
+      font-size:17px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .subline{margin-top:4px;color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .dot.ok{background:var(--ok)}
+    .dot.warn{background:var(--warn)}
+    .dot.bad{background:var(--bad)}
+    .open-btn{min-width:92px}
+    .student-fin{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:8px;
+    }
+    .mini-stat{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#171923;
+      padding:9px 10px;
+      min-width:0;
+    }
+    .mini-stat .k{font-size:11px;color:var(--muted)}
+    .mini-stat .v{font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chip{
+      display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);
+      border-radius:999px;background:#171923;font-size:12px;color:#dbe1f0;
+    }
+    .chip.ok{border-color:rgba(44,194,107,.3);background:rgba(44,194,107,.12)}
+    .chip.warn{border-color:rgba(241,196,15,.3);background:rgba(241,196,15,.12)}
+    .chip.bad{border-color:rgba(255,82,82,.3);background:rgba(255,82,82,.12)}
+    .detail-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    .detail-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#171923;
+      padding:12px;
+    }
+    .detail-card h4{margin:0 0 10px;font-size:14px}
+    .pkg-row{display:flex;gap:8px;flex-wrap:wrap}
+    .pkg-btn{
+      flex:1 1 0;
+      min-width:76px;
+      min-height:42px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#1d2130;
+      color:#dfe4f2;
+      cursor:pointer;
+    }
+    .pkg-btn.active{background:var(--accent);border-color:#2457d3;color:#fff;font-weight:700}
+    .money-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .money-block{display:flex;flex-direction:column;gap:6px}
+    .money-block .value-read{
+      min-height:44px;display:flex;align-items:center;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:#10131a;
+    }
+    .detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .detail-actions .full{grid-column:1/-1}
+    .matrix-head{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;
+    }
+    .matrix-note{font-size:12px;color:var(--muted)}
+    .matrix-scroll{
+      display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;
+    }
+    .day-card{
+      min-width:118px;max-width:118px;flex:0 0 118px;
+      border:1px solid var(--line);border-radius:16px;background:#171923;padding:10px;
+    }
+    .day-top{font-size:12px;color:#cfd3e1;text-align:center;margin-bottom:8px}
+    .slot-line{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+    .slot-line:last-child{margin-bottom:0}
+    .ud-label{font-size:12px;color:var(--muted);text-align:center}
+    .slot{
+      position:relative;min-height:44px;border:1px solid var(--line);border-radius:14px;background:#1b1f29;
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;user-select:none;
+      padding:4px;text-align:center;
+    }
+    .slot.paid{background:var(--paid);color:#111}
+    .slot.special{background:#252a38}
+    .counter.penult{color:var(--warn)}
+    .counter.final{color:var(--bad)}
+    .slot small{font-size:11px;color:var(--muted)}
+    .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .hint{color:var(--muted);font-size:12px;padding:0 14px 14px}
+    .sticky-bottom{
+      position:sticky;bottom:0;z-index:20;margin:12px -12px 0;padding:12px 12px calc(var(--safe-bottom) + 12px);
+      backdrop-filter: blur(14px);background:rgba(11,11,15,.92);border-top:1px solid rgba(38,42,51,.9);
+    }
+    .bulk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .sheet-backdrop,
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.54);display:none;z-index:90;
+    }
+    .sheet-backdrop.open,
+    .modal-backdrop.open{display:block}
+    .bottom-sheet{
+      position:fixed;left:0;right:0;bottom:0;z-index:100;
+      border-radius:24px 24px 0 0;background:#11141c;border-top:1px solid var(--line);
+      transform:translateY(110%);transition:transform .22s ease;padding:12px 12px calc(var(--safe-bottom) + 14px);
+      box-shadow:0 -18px 40px rgba(0,0,0,.4);
+    }
+    .bottom-sheet.open{transform:translateY(0)}
+    .sheet-handle{width:44px;height:5px;border-radius:999px;background:#3a3f4d;margin:4px auto 14px}
+    .sheet-title{font-size:17px;margin:0 0 4px}
+    .sheet-sub{color:var(--muted);font-size:12px;margin-bottom:14px}
+    .sheet-actions{display:grid;gap:10px}
+    .modal{
+      position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);
+      width:min(calc(100% - 24px),420px);background:#11141c;border:1px solid var(--line);border-radius:22px;
+      z-index:100;padding:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.18s ease;
+    }
+    .modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+    .modal h3{margin:0 0 12px}
+    .modal-grid{display:grid;gap:10px}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .empty{padding:18px;color:var(--muted);text-align:center}
+    @media (min-width:680px){
+      .actions-grid{grid-template-columns:repeat(3,1fr)}
+      .filters-grid{grid-template-columns:repeat(3,1fr)}
+      .field.full{grid-column:1/-1}
+      .detail-grid{grid-template-columns:1.1fr .9fr}
+      .bulk-grid{grid-template-columns:repeat(3,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="appRoot">
+    <div class="topbar">
+      <div class="title-row">
+        <div class="title-wrap">
+          <h1>КУТО</h1>
+          <p id="contextLine">Кикбоксинг • Групповая • Группа A • Сентябрь 2025</p>
+        </div>
+        <div class="badge" id="selectedBadge">Выбрано: 0</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>Действия</h2>
+          <div class="section-sub">Массовые операции и быстрый ввод</div>
+        </div>
+      </div>
+      <div class="actions-grid">
+        <button class="btn btn-green" id="btnAdd">＋ Ученик</button>
+        <button class="btn btn-blue" id="btnTransferSel">Перенести выбранных</button>
+        <button class="btn btn-blue full" id="btnTransferGroup">Перенести группу</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>Контекст</h2>
+          <div class="section-sub">Фильтры, месяц и состав</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="filters-grid">
+          <label class="field">
+            <span class="label">Дисциплина</span>
+            <select class="select" id="disciplineSel">
+              <option>Кикбоксинг</option>
+              <option>Кроссфит</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Тип</span>
+            <select class="select" id="typeSel">
+              <option>Групповая</option>
+              <option>Индивидуальная</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Группа</span>
+            <select class="select" id="groupSel">
+              <option>Группа A</option>
+              <option>Группа B</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Месяц</span>
+            <select class="select" id="monthSel"></select>
+          </label>
+          <label class="field">
+            <span class="label">Год</span>
+            <select class="select" id="yearSel"></select>
+          </label>
+          <label class="field full">
+            <span class="label">Поиск</span>
+            <div class="search-row">
+              <input class="search" id="searchInput" placeholder="Фамилия Имя" />
+              <button class="btn btn-small" id="btnApply">Показать</button>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="summary-strip">
+        <span id="summaryCount">Ученики: 0</span>
+        <span id="summaryMonth">Сентябрь 2025</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>Список учеников</h2>
+          <div class="section-sub">Выберите одного для детальной работы</div>
+        </div>
+      </div>
+      <div class="list" id="studentList"></div>
+    </section>
+
+    <section class="section" id="activeSection">
+      <div class="section-head">
+        <div>
+          <h2>Активный ученик</h2>
+          <div class="section-sub">Пакет, оплата, долг, статус и действия</div>
+        </div>
+      </div>
+      <div class="detail" id="activeDetail"></div>
+    </section>
+
+    <section class="section" id="matrixSection">
+      <div class="section-head">
+        <div>
+          <h2>Прогресс месяца</h2>
+          <div class="section-sub">Одна матрица — только для выбранного ученика</div>
+        </div>
+      </div>
+      <div class="matrix-wrap" id="matrixWrap"></div>
+      <div class="hint">Тап по ячейке: цикл 0 → 1 → 2 → 0. Долгий тап: Пробная / Разовая / Бонусная / Очистить.</div>
+    </section>
+
+    <div class="sticky-bottom">
+      <div class="bulk-grid">
+        <button class="btn btn-ghost" id="btnFocusList">К списку</button>
+        <button class="btn btn-ghost" id="btnFocusDetail">К карточке</button>
+        <button class="btn btn-ghost" id="btnFocusMatrix">К прогрессу</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="bottom-sheet" id="slotSheet">
+    <div class="sheet-handle"></div>
+    <h3 class="sheet-title">Тип слота</h3>
+    <div class="sheet-sub" id="slotSheetSub">Дата и ячейка</div>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" data-slot-action="trial">П — пробная (0)</button>
+      <button class="btn btn-ghost" data-slot-action="single">Р — разовая (+600)</button>
+      <button class="btn btn-ghost" data-slot-action="bonus">БОН — бонусная</button>
+      <button class="btn btn-danger" data-slot-action="clear">Очистить слот</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal" id="addModal">
+    <h3>Добавить ученика</h3>
+    <div class="modal-grid">
+      <label class="field">
+        <span class="label">ФИО</span>
+        <input class="input" id="addFio" placeholder="Новый Ученик" />
+      </label>
+      <label class="field">
+        <span class="label">Пакет</span>
+        <select class="select" id="addPkg">
+          <option value="4">Блок 4</option>
+          <option value="8">Блок 8</option>
+          <option value="12" selected>Блок 12</option>
+        </select>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnAddCancel">Отмена</button>
+      <button class="btn btn-green" id="btnAddConfirm">Создать</button>
+    </div>
+  </div>
+
+  <script>
+    const PRICE = {4:2000, 8:3000, 12:4000};
+    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+    const STORAGE_KEY = 'uaft_kuto_mobile_v1';
+
+    const els = {
+      disciplineSel: document.getElementById('disciplineSel'),
+      typeSel: document.getElementById('typeSel'),
+      groupSel: document.getElementById('groupSel'),
+      monthSel: document.getElementById('monthSel'),
+      yearSel: document.getElementById('yearSel'),
+      searchInput: document.getElementById('searchInput'),
+      btnApply: document.getElementById('btnApply'),
+      btnAdd: document.getElementById('btnAdd'),
+      btnTransferSel: document.getElementById('btnTransferSel'),
+      btnTransferGroup: document.getElementById('btnTransferGroup'),
+      contextLine: document.getElementById('contextLine'),
+      selectedBadge: document.getElementById('selectedBadge'),
+      summaryCount: document.getElementById('summaryCount'),
+      summaryMonth: document.getElementById('summaryMonth'),
+      studentList: document.getElementById('studentList'),
+      activeDetail: document.getElementById('activeDetail'),
+      matrixWrap: document.getElementById('matrixWrap'),
+      activeSection: document.getElementById('activeSection'),
+      matrixSection: document.getElementById('matrixSection'),
+      btnFocusList: document.getElementById('btnFocusList'),
+      btnFocusDetail: document.getElementById('btnFocusDetail'),
+      btnFocusMatrix: document.getElementById('btnFocusMatrix'),
+      sheetBackdrop: document.getElementById('sheetBackdrop'),
+      slotSheet: document.getElementById('slotSheet'),
+      slotSheetSub: document.getElementById('slotSheetSub'),
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      addModal: document.getElementById('addModal'),
+      addFio: document.getElementById('addFio'),
+      addPkg: document.getElementById('addPkg'),
+      btnAddCancel: document.getElementById('btnAddCancel'),
+      btnAddConfirm: document.getElementById('btnAddConfirm'),
+    };
+
+    function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+    function dm(d){ return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1); }
+    function wd(d){ return WEEK[d.getDay()]; }
+    function ymKey(y,m){ return `${y}-${String(m+1).padStart(2,'0')}`; }
+    function nextMonth(y,m){ return m === 11 ? [y+1,0] : [y,m+1]; }
+    function priceFor(pkg){ return PRICE[pkg] || 0; }
+    function statusByPay(pay, price){ if(pay <= 0) return 'bad'; if(pay < price) return 'warn'; return 'ok'; }
+    function firstMondayOnOrAfter(y,m){ const d = new Date(y,m,1); const dow = d.getDay(); const add = (dow <= 1 ? (1-dow) : (8-dow)); d.setDate(d.getDate() + add); return d; }
+    function datesMWF(y,m){ const arr = []; let d = firstMondayOnOrAfter(y,m); for(let k=0;k<12;k++){ arr.push(new Date(d)); const step = (k%3===2) ? 3 : 2; d.setDate(d.getDate() + step); } return arr; }
+    function initials(fio){ return fio.split(' ').map(w => w[0] || '').slice(0,2).join('').toUpperCase() || 'НУ'; }
+
+    let idSeq = 5;
+    let rosters = new Map();
+    let selectedByRoster = new Map();
+    let activeByRoster = new Map();
+    let slotCtx = null;
+    let touchHold = null;
+
+    function serializeVisits(v){
+      return {
+        m: Array.from(v.m.entries()),
+        d: Array.from(v.d.entries()),
+        t: Array.from(v.t.entries()),
+      };
+    }
+    function deserializeVisits(raw){
+      return {
+        m: new Map(raw?.m || []),
+        d: new Map(raw?.d || []),
+        t: new Map(raw?.t || []),
+      };
+    }
+    function saveState(){
+      const data = {
+        idSeq,
+        rosters: Array.from(rosters.entries()).map(([key, roster]) => [key, {
+          students: roster.students,
+          visits: Array.from(roster.visits.entries()).map(([sid,v]) => [sid, serializeVisits(v)])
+        }]),
+        selectedByRoster: Array.from(selectedByRoster.entries()).map(([key, set]) => [key, Array.from(set)]),
+        activeByRoster: Array.from(activeByRoster.entries()),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+    function loadState(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      try{
+        const data = JSON.parse(raw);
+        idSeq = data.idSeq || 5;
+        rosters = new Map((data.rosters || []).map(([key, roster]) => [key, {
+          students: roster.students || [],
+          visits: new Map((roster.visits || []).map(([sid,v]) => [Number(sid), deserializeVisits(v)]))
+        }]));
+        selectedByRoster = new Map((data.selectedByRoster || []).map(([key, ids]) => [key, new Set(ids)]));
+        activeByRoster = new Map((data.activeByRoster || []).map(([key, sid]) => [key, Number(sid)]));
+        return true;
+      }catch(err){
+        console.warn('State load failed', err);
+        return false;
+      }
+    }
+    function initDefaultRoster(){
+      const key = ymKey(2025,8);
+      const students = [
+        {id:1,fio:'Иванов Иван',status:'ok',   pkg:12,pay:4000,debt:0,    avatar:'https://i.pravatar.cc/64?img=15', bonusCount:0, rCount:0, frozen:false},
+        {id:2,fio:'Петров Пётр',status:'warn', pkg:8, pay:2000,debt:1000, avatar:'https://i.pravatar.cc/64?img=32', bonusCount:0, rCount:0, frozen:false},
+        {id:3,fio:'Фролова Анна',status:'bad', pkg:4, pay:0,   debt:2000, avatar:'https://i.pravatar.cc/64?img=5',  bonusCount:0, rCount:0, frozen:false},
+        {id:4,fio:'Ксенофонтов Андрей',status:'bad',pkg:12,pay:0,debt:4000, avatar:'https://i.pravatar.cc/64?img=66', bonusCount:0, rCount:0, frozen:false},
+      ];
+      const visits = new Map();
+      students.forEach(s => visits.set(s.id,{m:new Map(),d:new Map(),t:new Map()}));
+      rosters.set(key,{students,visits});
+      selectedByRoster.set(key, new Set(students.map(s => s.id)));
+      activeByRoster.set(key, 1);
+    }
+    if(!loadState()) initDefaultRoster();
+
+    function currentKey(){ return ymKey(Number(els.yearSel.value), Number(els.monthSel.value)); }
+    function getRoster(y,m){
+      const key = ymKey(y,m);
+      if(!rosters.has(key)) rosters.set(key,{students:[],visits:new Map()});
+      if(!selectedByRoster.has(key)) selectedByRoster.set(key,new Set());
+      return rosters.get(key);
+    }
+    function getSelectionSet(key){
+      if(!selectedByRoster.has(key)) selectedByRoster.set(key,new Set());
+      return selectedByRoster.get(key);
+    }
+    function getActiveStudentId(key, list){
+      let sid = activeByRoster.get(key);
+      if(sid && list.some(s => s.id === sid)) return sid;
+      sid = list[0]?.id || null;
+      if(sid != null) activeByRoster.set(key, sid);
+      return sid;
+    }
+    function getState(v, kind, i){ return (kind === 'm' ? v.m : v.d).get(i) || 0; }
+    function setState(v, kind, i, value){ (kind === 'm' ? v.m : v.d).set(i, value); }
+    function getFilteredStudents(roster){
+      const q = (els.searchInput.value || '').trim().toLowerCase();
+      if(!q) return roster.students;
+      return roster.students.filter(s => s.fio.toLowerCase().includes(q));
+    }
+    function contextText(){
+      return `${els.disciplineSel.value} • ${els.typeSel.value} • ${els.groupSel.value} • ${MONTHS[Number(els.monthSel.value)]} ${els.yearSel.value}`;
+    }
+    function monthText(){
+      return `${MONTHS[Number(els.monthSel.value)]} ${els.yearSel.value}`;
+    }
+
+    function syncStudentComputed(s){
+      s.pay = Math.max(0, Number(s.pay) || 0);
+      const price = priceFor(s.pkg);
+      s.debt = Math.max(0, price - s.pay);
+      s.status = statusByPay(s.pay, price);
+    }
+
+    function avatarNode(student){
+      const wrap = document.createElement('div');
+      wrap.className = 'avatar';
+      if(student.avatar){
+        const img = document.createElement('img');
+        img.src = student.avatar;
+        img.alt = student.fio;
+        img.onerror = () => {
+          wrap.innerHTML = '';
+          const span = document.createElement('span');
+          span.textContent = initials(student.fio);
+          wrap.appendChild(span);
+        };
+        wrap.appendChild(img);
+      }else{
+        const span = document.createElement('span');
+        span.textContent = initials(student.fio);
+        wrap.appendChild(span);
+      }
+      return wrap;
+    }
+
+    function statusChip(status){
+      const span = document.createElement('span');
+      span.className = `chip ${status}`;
+      const dot = document.createElement('span');
+      dot.className = `dot ${status}`;
+      span.appendChild(dot);
+      span.appendChild(document.createTextNode(status === 'ok' ? 'Активен' : status === 'warn' ? 'Частично' : 'Не оплачен'));
+      return span;
+    }
+
+    function renderStudentList(roster, list, key){
+      const selection = getSelectionSet(key);
+      const activeId = getActiveStudentId(key, list);
+      els.studentList.innerHTML = '';
+      if(list.length === 0){
+        els.studentList.innerHTML = '<div class="empty">По текущим фильтрам учеников нет.</div>';
+        return;
+      }
+      list.forEach(student => {
+        syncStudentComputed(student);
+        const card = document.createElement('article');
+        card.className = 'student-card' + (student.id === activeId ? ' active' : '');
+
+        const top = document.createElement('div');
+        top.className = 'student-top';
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'toggle ' + (selection.has(student.id) ? 'on' : '');
+        toggle.addEventListener('click', () => {
+          if(selection.has(student.id)) selection.delete(student.id); else selection.add(student.id);
+          saveState();
+          render();
+        });
+
+        const av = avatarNode(student);
+        const nameWrap = document.createElement('div');
+        nameWrap.className = 'name-wrap';
+        const name = document.createElement('h3');
+        name.className = 'name';
+        name.textContent = student.fio;
+        const sub = document.createElement('div');
+        sub.className = 'subline';
+        sub.appendChild(statusChip(student.status));
+        const pkgChip = document.createElement('span');
+        pkgChip.className = 'chip';
+        pkgChip.textContent = `Блок ${student.pkg}`;
+        sub.appendChild(pkgChip);
+        if(student.frozen){
+          const frozenChip = document.createElement('span');
+          frozenChip.className = 'chip';
+          frozenChip.textContent = '❄ Заморожен';
+          sub.appendChild(frozenChip);
+        }
+        nameWrap.append(name, sub);
+
+        const openBtn = document.createElement('button');
+        openBtn.className = 'btn btn-small btn-ghost open-btn';
+        openBtn.textContent = student.id === activeId ? 'Открыт' : 'Открыть';
+        openBtn.addEventListener('click', () => {
+          activeByRoster.set(key, student.id);
+          saveState();
+          render();
+          setTimeout(() => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}), 80);
+        });
+
+        top.append(toggle, av, nameWrap, openBtn);
+
+        const fin = document.createElement('div');
+        fin.className = 'student-fin';
+        fin.innerHTML = `
+          <div class="mini-stat"><div class="k">Оплачено</div><div class="v">${student.pay}</div></div>
+          <div class="mini-stat"><div class="k">Долг</div><div class="v">${student.debt}</div></div>
+          <div class="mini-stat"><div class="k">Прогресс</div><div class="v">${progressLabel(roster, student)}</div></div>
+        `;
+
+        card.append(top, fin);
+        els.studentList.appendChild(card);
+      });
+    }
+
+    function progressLabel(roster, student){
+      const v = roster.visits.get(student.id) || {m:new Map(),d:new Map(),t:new Map()};
+      let acc = 0;
+      for(let i=0;i<12;i++){
+        const tm = v.t.get(`${i}-m`), td = v.t.get(`${i}-d`);
+        if(!tm && getState(v,'m',i) > 0) acc += 1;
+        if(!td && getState(v,'d',i) > 0) acc += 1;
+      }
+      return `${Math.min(acc, student.pkg)}/${student.pkg}`;
+    }
+
+    function renderDetail(roster, activeStudent, key){
+      els.activeDetail.innerHTML = '';
+      if(!activeStudent){
+        els.activeDetail.innerHTML = '<div class="empty">Сначала выберите ученика в списке.</div>';
+        return;
+      }
+      syncStudentComputed(activeStudent);
+
+      const grid = document.createElement('div');
+      grid.className = 'detail-grid';
+
+      const left = document.createElement('div');
+      left.className = 'detail-card';
+      left.innerHTML = `<h4>${activeStudent.fio}</h4>`;
+      const pkgRow = document.createElement('div');
+      pkgRow.className = 'pkg-row';
+      [4,8,12].forEach(pkg => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pkg-btn' + (activeStudent.pkg === pkg ? ' active' : '');
+        btn.textContent = `Блок ${pkg}`;
+        btn.addEventListener('click', () => {
+          activeStudent.pkg = pkg;
+          activeStudent.pay = priceFor(pkg);
+          activeStudent.debt = 0;
+          activeStudent.status = 'ok';
+          saveState();
+          render();
+        });
+        pkgRow.appendChild(btn);
+      });
+      left.appendChild(pkgRow);
+
+      const moneyGrid = document.createElement('div');
+      moneyGrid.className = 'money-grid';
+      moneyGrid.style.marginTop = '12px';
+
+      const payBlock = document.createElement('label');
+      payBlock.className = 'money-block';
+      payBlock.innerHTML = '<span class="label">Оплачено</span>';
+      const payInput = document.createElement('input');
+      payInput.className = 'input';
+      payInput.inputMode = 'numeric';
+      payInput.value = String(activeStudent.pay);
+      payInput.addEventListener('input', () => {
+        activeStudent.pay = Math.max(0, Number(payInput.value) || 0);
+        const price = priceFor(activeStudent.pkg);
+        activeStudent.debt = Math.max(0, price - activeStudent.pay);
+        activeStudent.status = statusByPay(activeStudent.pay, price);
+        saveState();
+        render(false);
+      });
+      payBlock.appendChild(payInput);
+
+      const debtBlock = document.createElement('div');
+      debtBlock.className = 'money-block';
+      debtBlock.innerHTML = '<span class="label">Долг</span><div class="value-read">' + activeStudent.debt + '</div>';
+      moneyGrid.append(payBlock, debtBlock);
+      left.appendChild(moneyGrid);
+
+      const right = document.createElement('div');
+      right.className = 'detail-card';
+      right.innerHTML = '<h4>Статус и действия</h4>';
+      const chips = document.createElement('div');
+      chips.className = 'legend';
+      chips.append(
+        statusChip(activeStudent.status),
+        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Пакет: ${priceFor(activeStudent.pkg)}`; return c; })(),
+        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Разовые: ${activeStudent.rCount||0}`; return c; })(),
+        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Бонус: ${activeStudent.bonusCount||0}`; return c; })(),
+      );
+      right.appendChild(chips);
+
+      const actions = document.createElement('div');
+      actions.className = 'detail-actions';
+      actions.style.marginTop = '12px';
+
+      const freezeBtn = document.createElement('button');
+      freezeBtn.className = 'btn btn-small btn-ghost';
+      freezeBtn.textContent = activeStudent.frozen ? 'Разморозить' : 'Заморозка';
+      freezeBtn.addEventListener('click', () => {
+        activeStudent.frozen = !activeStudent.frozen;
+        saveState();
+        render();
+      });
+
+      const transferBtn = document.createElement('button');
+      transferBtn.className = 'btn btn-small btn-blue';
+      transferBtn.textContent = 'Перенести ученика';
+      transferBtn.addEventListener('click', () => transferStudents([activeStudent.id]));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-small btn-danger full';
+      deleteBtn.textContent = 'Удалить ученика';
+      deleteBtn.addEventListener('click', () => {
+        if(!confirm(`Удалить ${activeStudent.fio}?`)) return;
+        const roster = getRoster(Number(els.yearSel.value), Number(els.monthSel.value));
+        roster.students = roster.students.filter(s => s.id !== activeStudent.id);
+        roster.visits.delete(activeStudent.id);
+        getSelectionSet(key).delete(activeStudent.id);
+        if(activeByRoster.get(key) === activeStudent.id){
+          activeByRoster.delete(key);
+        }
+        saveState();
+        render();
+      });
+
+      actions.append(freezeBtn, transferBtn, deleteBtn);
+      right.appendChild(actions);
+
+      grid.append(left, right);
+      els.activeDetail.appendChild(grid);
+    }
+
+    function renderMatrix(roster, activeStudent){
+      els.matrixWrap.innerHTML = '';
+      if(!activeStudent){
+        els.matrixWrap.innerHTML = '<div class="empty">Нет активного ученика для прогрессной матрицы.</div>';
+        return;
+      }
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const dates = datesMWF(y,m);
+      const v = roster.visits.get(activeStudent.id) || {m:new Map(), d:new Map(), t:new Map()};
+      roster.visits.set(activeStudent.id, v);
+
+      const head = document.createElement('div');
+      head.className = 'matrix-head';
+      head.innerHTML = `<div><strong>${activeStudent.fio}</strong><div class="matrix-note">Пакет ${activeStudent.pkg} • Оплачено ${activeStudent.pay} • Долг ${activeStudent.debt}</div></div>`;
+      els.matrixWrap.appendChild(head);
+
+      const scroll = document.createElement('div');
+      scroll.className = 'matrix-scroll';
+
+      let acc = 0;
+      dates.forEach((date, i) => {
+        const card = document.createElement('div');
+        card.className = 'day-card';
+        const top = document.createElement('div');
+        top.className = 'day-top';
+        top.textContent = `${dm(date)} ${wd(date)}`;
+        card.appendChild(top);
+
+        const ms = getState(v,'m',i), ds = getState(v,'d',i);
+        const tm = v.t.get(`${i}-m`), td = v.t.get(`${i}-d`);
+
+        const mIndex = !tm && ms > 0 ? acc + 1 : null;
+        const dIndex = !td && ds > 0 ? acc + (ms > 0 ? 1 : 0) + 1 : null;
+
+        card.appendChild(renderSlotLine('У', buildSlotNode(activeStudent, v, i, 'm', tm, ms, mIndex, date)));
+        card.appendChild(renderSlotLine('Д', buildSlotNode(activeStudent, v, i, 'd', td, ds, dIndex, date)));
+
+        acc += (!tm && ms > 0 ? 1 : 0) + (!td && ds > 0 ? 1 : 0);
+        scroll.appendChild(card);
+      });
+
+      els.matrixWrap.appendChild(scroll);
+
+      const legend = document.createElement('div');
+      legend.className = 'legend';
+      const items = ['П — пробная','Р — разовая (+600)','БОН — бонусная','жёлтый фон — state 2','красный номер — финал пакета'];
+      items.forEach(text => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = text;
+        legend.appendChild(chip);
+      });
+      els.matrixWrap.appendChild(legend);
+    }
+
+    function renderSlotLine(label, slotNode){
+      const row = document.createElement('div');
+      row.className = 'slot-line';
+      const ud = document.createElement('div');
+      ud.className = 'ud-label';
+      ud.textContent = label;
+      row.append(ud, slotNode);
+      return row;
+    }
+
+    function buildSlotNode(student, visits, i, kind, tag, state, n, date){
+      const slot = document.createElement('button');
+      slot.type = 'button';
+      slot.className = 'slot';
+      slot.dataset.kind = kind;
+      slot.dataset.index = i;
+
+      const keyT = `${i}-${kind}`;
+      const onLong = () => {
+        openSlotSheet({ studentId: student.id, index: i, kind, date, label: `${dm(date)} ${wd(date)} • ${kind === 'm' ? 'У' : 'Д'}` });
+      };
+      const startHold = () => {
+        touchHold = { fired:false, timer:setTimeout(() => { touchHold.fired = true; onLong(); }, 420) };
+      };
+      const endHold = () => {
+        if(!touchHold) return false;
+        clearTimeout(touchHold.timer);
+        const fired = touchHold.fired;
+        touchHold = null;
+        return fired;
+      };
+
+      slot.addEventListener('pointerdown', startHold);
+      slot.addEventListener('pointerup', () => {
+        const wasLong = endHold();
+        if(wasLong) return;
+        if(!visits.t.get(keyT)){
+          const cur = getState(visits, kind, i);
+          const next = (cur + 1) % 3;
+          setState(visits, kind, i, next);
+          saveState();
+          render(false);
+        }
+      });
+      slot.addEventListener('pointerleave', endHold);
+      slot.addEventListener('pointercancel', endHold);
+      slot.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        onLong();
+      });
+
+      if(tag){
+        slot.classList.add('special');
+        if(tag.type === 'trial') slot.textContent = 'П';
+        if(tag.type === 'single') slot.textContent = tag.n > 1 ? `Р${tag.n}` : 'Р';
+        if(tag.type === 'bonus') slot.textContent = tag.n > 1 ? `БОН${tag.n}` : 'БОН';
+        return slot;
+      }
+      if(n == null || state === 0){
+        slot.innerHTML = '<small>пусто</small>';
+        return slot;
+      }
+      const minN = Math.min(n, student.pkg);
+      const penult = (student.pkg === 12 && minN === 11) || (student.pkg === 8 && minN === 7) || (student.pkg === 4 && minN === 3);
+      const fin = (student.pkg === 12 && minN === 12) || (student.pkg === 8 && minN === 8) || (student.pkg === 4 && minN === 4);
+      if(state === 2 && !(penult || fin)) slot.classList.add('paid');
+      const span = document.createElement('span');
+      span.className = 'counter' + (penult ? ' penult' : '') + (fin ? ' final' : '');
+      span.textContent = `${n}/${student.pkg}`;
+      slot.textContent = '';
+      slot.appendChild(span);
+      return slot;
+    }
+
+    function openSlotSheet(ctx){
+      slotCtx = ctx;
+      els.slotSheetSub.textContent = `${ctx.label} • спец-тип слота`;
+      els.sheetBackdrop.classList.add('open');
+      els.slotSheet.classList.add('open');
+    }
+    function closeSlotSheet(){
+      slotCtx = null;
+      els.sheetBackdrop.classList.remove('open');
+      els.slotSheet.classList.remove('open');
+    }
+
+    function applySlotAction(action){
+      if(!slotCtx) return;
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const roster = getRoster(y,m);
+      const student = roster.students.find(s => s.id === slotCtx.studentId);
+      if(!student) return;
+      const visits = roster.visits.get(student.id) || {m:new Map(), d:new Map(), t:new Map()};
+      roster.visits.set(student.id, visits);
+      const key = `${slotCtx.index}-${slotCtx.kind}`;
+
+      if(action === 'trial'){
+        setState(visits, slotCtx.kind, slotCtx.index, 0);
+        visits.t.set(key, {type:'trial'});
+      } else if(action === 'single'){
+        setState(visits, slotCtx.kind, slotCtx.index, 0);
+        student.rCount = (student.rCount || 0) + 1;
+        visits.t.set(key, {type:'single', n:student.rCount});
+        student.pay = (Number(student.pay) || 0) + 600;
+        const price = priceFor(student.pkg);
+        student.debt = Math.max(0, price - student.pay);
+        student.status = statusByPay(student.pay, price);
+      } else if(action === 'bonus'){
+        setState(visits, slotCtx.kind, slotCtx.index, 0);
+        student.bonusCount = (student.bonusCount || 0) + 1;
+        visits.t.set(key, {type:'bonus', n:student.bonusCount});
+      } else if(action === 'clear'){
+        setState(visits, slotCtx.kind, slotCtx.index, 0);
+        visits.t.delete(key);
+      }
+      saveState();
+      render(false);
+      closeSlotSheet();
+    }
+
+    function openAddModal(){
+      els.addFio.value = '';
+      els.addPkg.value = '12';
+      els.modalBackdrop.classList.add('open');
+      els.addModal.classList.add('open');
+      setTimeout(() => els.addFio.focus(), 40);
+    }
+    function closeAddModal(){
+      els.modalBackdrop.classList.remove('open');
+      els.addModal.classList.remove('open');
+    }
+
+    function addStudent(){
+      const fio = (els.addFio.value || '').trim();
+      if(!fio) return;
+      const pkg = Number(els.addPkg.value) || 12;
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const roster = getRoster(y,m);
+      const price = priceFor(pkg);
+      const id = ++idSeq;
+      const avatar = `https://i.pravatar.cc/64?img=${Math.floor(1 + Math.random()*70)}`;
+      const student = {id, fio, status:'ok', pkg, pay:price, debt:0, avatar, bonusCount:0, rCount:0, frozen:false};
+      roster.students.push(student);
+      roster.visits.set(id, {m:new Map(), d:new Map(), t:new Map()});
+      getSelectionSet(currentKey()).add(id);
+      activeByRoster.set(currentKey(), id);
+      saveState();
+      closeAddModal();
+      render();
+      setTimeout(() => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}), 120);
+    }
+
+    function transferStudents(ids){
+      if(!ids || ids.length === 0){
+        alert('Нет выбранных учеников для переноса.');
+        return;
+      }
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const roster = getRoster(y,m);
+      const [ny,nm] = nextMonth(y,m);
+      const next = getRoster(ny,nm);
+      ids.forEach(id => {
+        const s = roster.students.find(x => x.id === id);
+        if(!s) return;
+        const cloneId = Date.now() + Math.floor(Math.random()*100000);
+        next.students.push({
+          id: cloneId,
+          fio: s.fio,
+          status: 'bad',
+          pkg: s.pkg,
+          pay: 0,
+          debt: priceFor(s.pkg),
+          avatar: s.avatar,
+          bonusCount: 0,
+          rCount: 0,
+          frozen: false,
+        });
+        next.visits.set(cloneId, {m:new Map(), d:new Map(), t:new Map()});
+        getSelectionSet(ymKey(ny,nm)).add(cloneId);
+      });
+      els.yearSel.value = String(ny);
+      els.monthSel.value = String(nm);
+      activeByRoster.delete(currentKey());
+      saveState();
+      render();
+    }
+
+    function transferSelected(){
+      const key = currentKey();
+      const ids = Array.from(getSelectionSet(key));
+      if(ids.length === 0){
+        alert('Выберите учеников тумблерами.');
+        return;
+      }
+      if(!confirm(`Перенести ${ids.length} учен. в следующий месяц?`)) return;
+      transferStudents(ids);
+    }
+
+    function transferWholeGroup(){
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const roster = getRoster(y,m);
+      if(roster.students.length === 0){
+        alert('В группе нет учеников.');
+        return;
+      }
+      if(!confirm(`Перенести всю группу (${roster.students.length}) в следующий месяц?`)) return;
+      transferStudents(roster.students.map(s => s.id));
+    }
+
+    function render(scrollTop = true){
+      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
+      const roster = getRoster(y,m);
+      roster.students.forEach(syncStudentComputed);
+      const key = currentKey();
+      const filtered = getFilteredStudents(roster);
+      const activeId = getActiveStudentId(key, filtered);
+      const activeStudent = filtered.find(s => s.id === activeId) || null;
+      const selectedCount = getSelectionSet(key).size;
+
+      els.contextLine.textContent = contextText();
+      els.selectedBadge.textContent = `Выбрано: ${selectedCount}`;
+      els.summaryCount.textContent = `Ученики: ${filtered.length}`;
+      els.summaryMonth.textContent = monthText();
+
+      renderStudentList(roster, filtered, key);
+      renderDetail(roster, activeStudent, key);
+      renderMatrix(roster, activeStudent);
+      saveState();
+
+      if(scrollTop){
+        // no-op, preserves current position by default
+      }
+    }
+
+    function populateSelectors(){
+      MONTHS.forEach((month, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = month;
+        if(idx === 8) opt.selected = true;
+        els.monthSel.appendChild(opt);
+      });
+      for(let y=2024; y<=2030; y++){
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if(y === 2025) opt.selected = true;
+        els.yearSel.appendChild(opt);
+      }
+    }
+
+    populateSelectors();
+
+    els.btnApply.addEventListener('click', () => render());
+    els.monthSel.addEventListener('change', () => render());
+    els.yearSel.addEventListener('change', () => render());
+    els.searchInput.addEventListener('keydown', e => { if(e.key === 'Enter') render(); });
+    els.disciplineSel.addEventListener('change', render);
+    els.typeSel.addEventListener('change', render);
+    els.groupSel.addEventListener('change', render);
+
+    els.btnAdd.addEventListener('click', openAddModal);
+    els.btnAddCancel.addEventListener('click', closeAddModal);
+    els.btnAddConfirm.addEventListener('click', addStudent);
+    els.modalBackdrop.addEventListener('click', closeAddModal);
+
+    els.btnTransferSel.addEventListener('click', transferSelected);
+    els.btnTransferGroup.addEventListener('click', transferWholeGroup);
+
+    els.sheetBackdrop.addEventListener('click', closeSlotSheet);
+    document.querySelectorAll('[data-slot-action]').forEach(btn => {
+      btn.addEventListener('click', () => applySlotAction(btn.dataset.slotAction));
+    });
+
+    els.btnFocusList.addEventListener('click', () => document.querySelector('.list').scrollIntoView({behavior:'smooth', block:'start'}));
+    els.btnFocusDetail.addEventListener('click', () => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}));
+    els.btnFocusMatrix.addEventListener('click', () => els.matrixSection.scrollIntoView({behavior:'smooth', block:'start'}));
+
+    render();
+  </script>
+</body>
+</html>
