@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>UAFT • KUTO Mobile v5</title>
+  <title>UAFT • KUTO Mobile v8</title>
   <style>
     :root{
       --bg:#0b0c11;--panel:#141720;--panel2:#171b26;--line:#262b38;--text:#edf0f7;--muted:#9da4b8;
@@ -49,7 +49,7 @@
     .progress-meter-title{font-size:13px;color:var(--muted);font-weight:800}
     .meter-track{height:10px;border-radius:999px;background:#0d1017;border:1px solid var(--line);overflow:hidden}
     .meter-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),#7bf0a2)}
-    .sticky-card{position:sticky;top:86px;z-index:8}
+    .sticky-card{position:sticky;top:0;z-index:12}
 
     .list-wrap{display:flex;flex-direction:column;gap:8px}
     .row{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:10px 11px;cursor:pointer}
@@ -128,6 +128,12 @@
 
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:70;background:#12161f;border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;max-width:calc(100vw - 32px);text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+    #view-packages{gap:0}
+    #view-packages .sticky-card{top:0;margin-top:-12px;margin-left:-12px;margin-right:-12px;border-radius:0 0 22px 22px;border-left:0;border-right:0}
+    @media (min-width:720px){
+      #view-packages .sticky-card{margin-left:-16px;margin-right:-16px}
+    }
 
     @media (min-width:720px){
       .content{max-width:780px;margin:0 auto;padding-left:16px;padding-right:16px}
@@ -256,9 +262,14 @@
   }
 
   function createStudent(data){
+    const fullName = data.fullName || [data.lastName, data.firstName].filter(Boolean).join(' ').trim() || 'Новый ученик';
+    const lastName = data.lastName || (fullName.split(/\s+/)[0] || '');
+    const firstName = data.firstName || (fullName.split(/\s+/).slice(1).join(' ') || '');
     const s = {
       id: data.id || uid(),
-      fullName: data.fullName || 'Новый ученик',
+      lastName,
+      firstName,
+      fullName,
       phone: data.phone || '',
       dob: data.dob || '',
       sex: data.sex || '—',
@@ -765,53 +776,62 @@
     }
     els.progress.querySelectorAll('[data-slot-idx]').forEach(btn => {
       const idx = Number(btn.dataset.slotIdx);
-      let timer=null, longPressed=false, moved=false, sx=0, sy=0;
-      const cancel = () => { clearTimeout(timer); };
-      const onStart = (e) => {
+      let timer=null, moved=false, sx=0, sy=0, didLongPress=false;
+      const cancel = () => { clearTimeout(timer); timer=null; };
+      const begin = (e) => {
         const p = e.touches ? e.touches[0] : e;
-        sx = p.clientX; sy = p.clientY; moved = false; longPressed = false;
-        timer = setTimeout(() => { longPressed = true; openSlotSheet(student, idx); }, 520);
+        sx = p.clientX; sy = p.clientY; moved = false; didLongPress = false;
+        timer = setTimeout(() => {
+          didLongPress = true;
+          app.progressScrollByStudent[student.id] = strip ? strip.scrollLeft : (app.progressScrollByStudent[student.id] || 0);
+          handleProgressHold(student, idx);
+        }, 900);
       };
-      const onMove = (e) => {
+      const move = (e) => {
         const p = e.touches ? e.touches[0] : e;
-        if(Math.abs(p.clientX - sx) > 10 || Math.abs(p.clientY - sy) > 10){
+        if(Math.abs(p.clientX - sx) > 20 || Math.abs(p.clientY - sy) > 20){
           moved = true;
           cancel();
         }
       };
-      const onEnd = (e) => {
+      const end = () => {
         cancel();
-        if(moved || longPressed) return;
+        if(moved || didLongPress) return;
         const slot = getSlot(student, idx);
-        const date = datesMWF(app.year, app.month, app.trainingDateLimit)[idx];
-        if(slot){
-          if(app.editUnlocked){
-            setSlot(student, idx, null);
-            render();
-            showToast('Тренировка снята');
-          } else {
-            openSlotSheet(student, idx);
-          }
-          return;
-        }
-        if(isPastTrainingDate(date)){ showToast('Дата уже прошла'); return; }
-        if(!requireUnlocked()) return;
-        const pkg = selectedProgressPackage(student);
-        if(!pkg){ showToast('Сначала выберите активный пакет'); return; }
-        if(remainingForPackage(student, pkg) <= 0){ showToast('Пакет исчерпан'); return; }
-        setSlot(student, idx, {packageId: pkg.id, start:'18:30', arrival:''});
-        render();
-        showToast('Тренировка отмечена');
+        if(slot) openSlotSheet(student, idx);
       };
-      btn.addEventListener('touchstart', onStart, {passive:true});
-      btn.addEventListener('touchmove', onMove, {passive:true});
-      btn.addEventListener('touchend', onEnd, {passive:true});
-      btn.addEventListener('mousedown', onStart);
-      btn.addEventListener('mousemove', onMove);
-      btn.addEventListener('mouseup', onEnd);
+      btn.addEventListener('touchstart', begin, {passive:true});
+      btn.addEventListener('touchmove', move, {passive:true});
+      btn.addEventListener('touchend', end, {passive:true});
+      btn.addEventListener('mousedown', begin);
+      btn.addEventListener('mousemove', move);
+      btn.addEventListener('mouseup', end);
       btn.addEventListener('mouseleave', cancel);
-      btn.addEventListener('contextmenu', (e) => { e.preventDefault(); openSlotSheet(student, idx); });
+      btn.addEventListener('contextmenu', (e) => { e.preventDefault(); });
     });
+  }
+
+  function handleProgressHold(student, idx){
+    const date = datesMWF(app.year, app.month, app.trainingDateLimit)[idx];
+    const slot = getSlot(student, idx);
+    const dtIso = dateIso(date);
+    if(dtIso > app.demoTodayIso){
+      showToast('Дата ещё не наступила');
+      return;
+    }
+    if(!requireUnlocked()) return;
+    if(slot){
+      setSlot(student, idx, null);
+      render();
+      showToast(isPastTrainingDate(date) ? 'Тренировка снята • снова пропуск' : 'Тренировка снята');
+      return;
+    }
+    const pkg = selectedProgressPackage(student);
+    if(!pkg){ showToast('Сначала выберите активный пакет'); return; }
+    if(remainingForPackage(student, pkg) <= 0){ showToast('Пакет исчерпан'); return; }
+    setSlot(student, idx, {packageId: pkg.id, start:'18:30', arrival:''});
+    render();
+    showToast('Тренировка отмечена');
   }
 
   function bindPackages(){
@@ -869,7 +889,10 @@
     if(mode==='create'){
       body.innerHTML = `
         <div class="sheet-group">
-          <label class="field"><span>ФИО</span><input id="new-name" placeholder="Фамилия Имя" /></label>
+          <div class="context-grid">
+            <label class="field"><span>Фамилия</span><input id="new-lastname" placeholder="Иванов" /></label>
+            <label class="field"><span>Имя</span><input id="new-firstname" placeholder="Иван" /></label>
+          </div>
           <div class="context-grid">
             <label class="field"><span>Телефон</span><input id="new-phone" placeholder="+7 ..." /></label>
             <label class="field"><span>Дата рождения</span><input id="new-dob" type="date" /></label>
@@ -879,13 +902,15 @@
         </div>`;
       body.querySelector('#save-new-student').onclick = () => {
         if(!requireUnlocked()) return;
-        const name = body.querySelector('#new-name').value.trim();
+        const lastName = body.querySelector('#new-lastname').value.trim();
+        const firstName = body.querySelector('#new-firstname').value.trim();
         const phone = body.querySelector('#new-phone').value.trim();
         const dob = body.querySelector('#new-dob').value.trim();
         const sex = body.querySelector('#new-sex').value;
-        if(!name){ showToast('Введите ФИО'); return; }
+        if(!lastName || !firstName){ showToast('Введите фамилию и имя'); return; }
+        const fullName = `${lastName} ${firstName}`.trim();
         const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({fullName:name, phone, dob, sex, packageHistory:[p], mainPackageId:p.id});
+        const student = createStudent({lastName, firstName, fullName, phone, dob, sex, packageHistory:[p], mainPackageId:p.id});
         students().push(student);
         app.selectedStudentId = student.id;
         closeSheet(); render(); showToast('Ученик добавлен');
@@ -909,7 +934,7 @@
         if(!requireUnlocked()) return;
         const src=app.studentPool.find(x=>x.id===btn.dataset.addPool); if(!src) return;
         const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
+        const student = createStudent({lastName:(src.fullName||'').split(/\s+/)[0]||'', firstName:(src.fullName||'').split(/\s+/).slice(1).join(' '), fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
         students().push(student); app.selectedStudentId = student.id;
         closeSheet(); render(); showToast('Ученик добавлен');
       });
@@ -922,7 +947,7 @@
         if(!requireUnlocked()) return;
         const src=app.groupPool.find(x=>x.id===btn.dataset.addGroup); if(!src) return;
         const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
+        const student = createStudent({lastName:(src.fullName||'').split(/\s+/)[0]||'', firstName:(src.fullName||'').split(/\s+/).slice(1).join(' '), fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
         students().push(student); app.selectedStudentId = student.id;
         closeSheet(); render(); showToast('Ученик добавлен из группы');
       });
