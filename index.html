@@ -3,126 +3,105 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>UAFT • KUTO Mobile v3</title>
+  <title>UAFT • KUTO Mobile v4</title>
   <style>
     :root{
-      --bg:#0b0c11;
-      --panel:#141720;
-      --panel2:#171b26;
-      --line:#262b38;
-      --text:#edf0f7;
-      --muted:#9da4b8;
-      --blue:#427bff;
-      --green:#34c56e;
-      --yellow:#f0d271;
-      --red:#ff6060;
-      --orange:#f39c12;
-      --violet:#a980ff;
-      --chip:#1d2330;
-      --shadow:0 10px 26px rgba(0,0,0,.34);
-      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --bg:#0b0c11;--panel:#141720;--panel2:#171b26;--line:#262b38;--text:#edf0f7;--muted:#9da4b8;
+      --blue:#427bff;--green:#34c56e;--yellow:#f0d271;--red:#ff6060;--orange:#f39c12;--violet:#a980ff;
+      --chip:#1d2330;--shadow:0 10px 26px rgba(0,0,0,.34);--safe-bottom:env(safe-area-inset-bottom,0px);
     }
     *{box-sizing:border-box}
     html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     body{overflow:hidden}
     button,input,select{font:inherit}
     .app{height:100dvh;display:flex;flex-direction:column;background:radial-gradient(circle at top center, rgba(66,123,255,.08), transparent 30%), var(--bg)}
-    .topbar{position:sticky;top:0;z-index:20;padding:16px 16px 12px;border-bottom:1px solid var(--line);backdrop-filter:blur(12px);background:rgba(11,12,17,.92)}
+    .topbar{position:sticky;top:0;z-index:30;padding:14px 14px 10px;border-bottom:1px solid var(--line);backdrop-filter:blur(12px);background:rgba(11,12,17,.92)}
     .title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-    h1{margin:0;font-size:28px;line-height:1.05;letter-spacing:.2px}
-    .sub{margin-top:6px;color:var(--muted);font-size:14px;line-height:1.35}
-    .badges{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-    .badge{border:1px solid var(--line);background:rgba(255,255,255,.02);padding:9px 12px;border-radius:999px;color:var(--muted);font-weight:700;white-space:nowrap;font-size:13px}
-    .badge.lock{cursor:pointer}
-    .badge.lock.unlocked{background:rgba(66,123,255,.16);border-color:rgba(66,123,255,.36);color:#d7e2ff}
+    h1{margin:0;font-size:28px;line-height:1.04;letter-spacing:.2px}
+    .sub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.3}
+    .head-right{display:flex;gap:8px;align-items:flex-start}
+    .badge{border:1px solid var(--line);background:rgba(255,255,255,.02);padding:8px 11px;border-radius:999px;color:var(--muted);font-weight:800;white-space:nowrap;font-size:13px}
+    .lock-btn{width:38px;height:38px;border-radius:14px;border:1px solid var(--line);background:#161b26;color:#dce5ff;display:grid;place-items:center;cursor:pointer;font-size:18px}
+    .lock-btn.unlocked{background:rgba(66,123,255,.18);border-color:rgba(66,123,255,.38)}
 
-    .content{flex:1;overflow:auto;padding:14px 14px 104px}
-    .view{display:none;flex-direction:column;gap:12px}
+    .content{flex:1;overflow:auto;padding:12px 12px 96px}
+    .view{display:none;flex-direction:column;gap:10px}
     .view.active{display:flex}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 100%), var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:var(--shadow)}
-    .section-title{font-size:17px;font-weight:800;margin:0 0 4px}
-    .section-sub{font-size:14px;color:var(--muted);margin:0 0 10px;line-height:1.35}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-
-    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--text);border-radius:16px;padding:12px 12px;font-weight:800;line-height:1.1;cursor:pointer}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 100%), var(--panel);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:var(--shadow)}
+    .toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--text);border-radius:15px;padding:11px 12px;font-weight:800;line-height:1.1;cursor:pointer}
     .btn.small{padding:10px 11px;font-size:14px;border-radius:14px}
     .btn.blue{background:var(--blue);border-color:#2d63dc}
     .btn.green{background:var(--green);border-color:#24a758;color:#07110a}
     .btn.warn{background:#302816;border-color:#5e4d1f;color:#f7dda0}
     .btn.danger{background:#331b1b;border-color:#6b2a2a;color:#ffb2b2}
     .btn.ghost{background:transparent}
-    .btn[disabled]{opacity:.45;cursor:default}
     .btn:active{transform:translateY(1px)}
+    .section-title{font-size:17px;font-weight:900;margin:0}
+    .context-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field span{font-size:12px;color:var(--muted)}
+    input,select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:15px;padding:12px 12px;outline:none}
+    input::placeholder{color:#73809a}
 
-    .context-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    label.field{display:flex;flex-direction:column;gap:7px;min-width:0}
-    label.field span{color:var(--muted);font-size:13px}
-    input,select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:13px 14px;outline:none}
-    input::placeholder{color:#6f7890}
-
-    .student-list{display:flex;flex-direction:column;gap:10px}
-    .student-card{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px;cursor:pointer}
-    .student-card.selected{border-color:#3d6cff;box-shadow:0 0 0 2px rgba(61,108,255,.18) inset}
-    .student-head{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:start}
-    .avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:900;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08)}
-    .main{min-width:0;display:flex;flex-direction:column;gap:8px}
-    .fio{font-size:18px;font-weight:800;line-height:1.05;word-break:break-word}
-    .meta{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:13px;font-weight:700}
+    .list-wrap{display:flex;flex-direction:column;gap:8px}
+    .row{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:10px 11px;cursor:pointer}
+    .row.selected{border-color:#3d6cff;box-shadow:0 0 0 2px rgba(61,108,255,.18) inset}
+    .avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08);font-size:16px;font-weight:900}
+    .row-main{min-width:0}
+    .fio{font-size:16px;font-weight:900;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;font-weight:800}
     .chip.ok{background:rgba(52,197,110,.16);border-color:rgba(52,197,110,.34);color:#92f1b3}
     .chip.frozen{background:rgba(66,123,255,.16);border-color:rgba(66,123,255,.34);color:#b8cfff}
     .chip.debt{background:rgba(255,96,96,.16);border-color:rgba(255,96,96,.34);color:#ffc1c1}
-    .side-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-    .icon-btn{width:38px;height:38px;border-radius:13px;border:1px solid var(--line);background:#171b26;color:#d9dfef;display:grid;place-items:center;cursor:pointer}
-    .icon-btn.danger{color:#ffb6b6;background:rgba(255,96,96,.1);border-color:rgba(255,96,96,.28)}
-    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .kpi{background:#121621;border:1px solid var(--line);border-radius:16px;padding:10px 10px 9px}
-    .kpi .label{color:var(--muted);font-size:12px;margin-bottom:5px}
-    .kpi .value{font-size:16px;font-weight:900;line-height:1.05}
-    .subline{font-size:13px;color:var(--muted);line-height:1.3}
-    .card-footer{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .linkish{font-size:14px;color:#dfe7ff;font-weight:800}
+    .row-side{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+    .status-btn{min-width:38px;height:34px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:#171b26;color:#dfe5f7;font-weight:900;cursor:pointer}
+    .status-btn.ok{background:rgba(52,197,110,.15);border-color:rgba(52,197,110,.32);color:#a2f3be}
+    .status-btn.off{background:rgba(255,96,96,.12);border-color:rgba(255,96,96,.3);color:#ffb7b7}
+    .row-kpis{display:grid;grid-template-columns:repeat(2,auto);gap:6px;margin-top:7px;font-size:12px;color:var(--muted)}
 
     .hero{display:flex;flex-direction:column;gap:12px}
     .hero-top{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:start}
-    .hero-avatar{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:22px;font-weight:900;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08)}
-    .hero h2{font-size:24px;line-height:1.05;margin:0;word-break:break-word}
+    .hero-avatar{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08);font-size:22px;font-weight:900;cursor:pointer}
+    .hero h2{margin:0;font-size:23px;line-height:1.04;word-break:break-word}
+    .mini-note{font-size:12px;color:var(--muted);margin-top:5px}
     .facts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .fact{background:#121621;border:1px solid var(--line);border-radius:16px;padding:10px}
-    .fact .label{color:var(--muted);font-size:12px;margin-bottom:4px}
-    .fact .value{font-size:15px;font-weight:800;line-height:1.12}
+    .fact .label{font-size:12px;color:var(--muted);margin-bottom:5px}
+    .fact .value{font-size:15px;font-weight:900;line-height:1.12}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-    .progress-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-    .lock-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-weight:800;cursor:pointer;white-space:nowrap;font-size:14px}
-    .lock-chip.unlocked{background:rgba(66,123,255,.18);border-color:rgba(66,123,255,.38);color:#cfe0ff}
-    .month-strip{overflow:auto;margin:0 -3px;padding:3px}
+    .progress-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+    .month-strip{overflow:auto;margin:0 -2px;padding:2px}
     .days{display:flex;gap:10px;min-width:max-content}
-    .day-card{width:132px;background:#121621;border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px}
-    .day-head{text-align:center}
-    .day-date{font-size:18px;font-weight:900;line-height:1.05}
-    .day-dow{font-size:13px;color:var(--muted);margin-top:4px}
-    .slot{position:relative;min-height:88px;border-radius:18px;border:1px solid var(--line);background:#171b26;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;cursor:pointer;user-select:none}
+    .day-card{width:128px;background:#121621;border:1px solid var(--line);border-radius:20px;padding:11px;display:flex;flex-direction:column;gap:10px}
+    .day-date{font-size:18px;font-weight:900;text-align:center;line-height:1.04}
+    .day-dow{font-size:12px;color:var(--muted);text-align:center;margin-top:4px}
+    .slot{position:relative;min-height:88px;border-radius:18px;border:1px solid var(--line);background:#171b26;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;cursor:pointer;user-select:none}
     .slot.empty{color:#7f8798}
     .slot.block{background:rgba(66,123,255,.12);border-color:rgba(66,123,255,.26)}
     .slot.trial{background:rgba(240,210,113,.14);border-color:rgba(240,210,113,.32);color:#ffe9a6}
     .slot.single{background:rgba(243,156,18,.14);border-color:rgba(243,156,18,.32);color:#ffd6a0}
     .slot.bonus{background:rgba(169,128,255,.14);border-color:rgba(169,128,255,.32);color:#dec8ff}
-    .slot .mainMark{font-size:20px;font-weight:900;line-height:1}
-    .slot .slotSub{font-size:12px;opacity:.9;line-height:1.2}
-    .slot .payMark{position:absolute;right:8px;top:8px;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:rgba(52,197,110,.16);border:1px solid rgba(52,197,110,.36);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#a8f4c1}
-    .time-meta{display:grid;grid-template-columns:1fr;gap:5px;margin-top:2px}
+    .mainMark{font-size:20px;font-weight:900;line-height:1}
+    .slotSub{font-size:11px;opacity:.9;line-height:1.15}
+    .payMark{position:absolute;right:8px;top:8px;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:rgba(52,197,110,.16);border:1px solid rgba(52,197,110,.36);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#a8f4c1}
+    .time-meta{display:grid;grid-template-columns:1fr;gap:4px}
     .time-meta div{font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
-    .legend{display:flex;flex-wrap:wrap;gap:8px}
-    .hint{color:var(--muted);font-size:13px;line-height:1.4}
 
-    .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + var(--safe-bottom));background:linear-gradient(180deg, rgba(11,12,17,0), rgba(11,12,17,.96) 30%, rgba(11,12,17,.98));backdrop-filter:blur(12px)}
-    .bottom-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .nav-btn{padding:13px 10px;border-radius:16px;border:1px solid var(--line);background:rgba(20,23,32,.96);color:var(--text);font-size:14px;font-weight:900;cursor:pointer}
+    .package-list{display:flex;flex-direction:column;gap:8px}
+    .package-card{background:#121621;border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .package-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .pkg-title{font-size:16px;font-weight:900;line-height:1.08}
+    .pkg-meta{display:flex;flex-wrap:wrap;gap:6px}
+
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 12px calc(10px + var(--safe-bottom));background:linear-gradient(180deg, rgba(11,12,17,0), rgba(11,12,17,.96) 30%, rgba(11,12,17,.98));backdrop-filter:blur(12px)}
+    .bottom-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .nav-btn{padding:12px 8px;border-radius:15px;border:1px solid var(--line);background:rgba(20,23,32,.96);color:var(--text);font-size:13px;font-weight:900;cursor:pointer}
     .nav-btn.active{border-color:#396bfa;background:#1b2540;color:#dfe7ff}
 
-    .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);display:none;z-index:50}
+    .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);display:none;z-index:60}
     .sheet-backdrop.show{display:block}
     .sheet{position:absolute;left:0;right:0;bottom:0;background:#11151f;border-top-left-radius:24px;border-top-right-radius:24px;border:1px solid var(--line);padding:14px 14px calc(14px + var(--safe-bottom));box-shadow:0 -18px 36px rgba(0,0,0,.44);max-height:min(84dvh,760px);overflow:auto}
     .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
@@ -130,20 +109,19 @@
     .sheet-sub{color:var(--muted);font-size:13px;line-height:1.35;margin-top:4px}
     .close{background:transparent;border:0;color:#aeb6ca;font-size:28px;line-height:1;cursor:pointer}
     .sheet-group{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-    .segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .segment{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     .segment button.active{border-color:#396bfa;background:#1b2540;color:#dfe7ff}
-    .list-choices{display:flex;flex-direction:column;gap:8px}
     .choice{background:#121621;border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
     .choice .name{font-weight:800;line-height:1.12}
     .choice .meta{font-size:12px;color:var(--muted)}
 
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:60;background:#12161f;border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;max-width:calc(100vw - 32px);text-align:center}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:70;background:#12161f;border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;max-width:calc(100vw - 32px);text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
     @media (min-width:720px){
-      .content{max-width:760px;margin:0 auto;padding-left:18px;padding-right:18px}
+      .content{max-width:780px;margin:0 auto;padding-left:16px;padding-right:16px}
       .bottom-nav{display:flex;justify-content:center}
-      .bottom-row{max-width:760px;width:100%}
+      .bottom-row{max-width:780px;width:100%}
     }
   </style>
 </head>
@@ -155,9 +133,9 @@
           <h1>KUTO</h1>
           <div class="sub" id="headerSub"></div>
         </div>
-        <div class="badges">
-          <div class="badge" id="activeBadge"></div>
-          <div class="badge lock" id="globalLockBadge"></div>
+        <div class="head-right">
+          <div class="badge" id="groupStatsBadge"></div>
+          <button class="lock-btn" id="globalLockBtn" aria-label="Lock"></button>
         </div>
       </div>
     </header>
@@ -166,6 +144,7 @@
       <section class="view active" id="view-list"></section>
       <section class="view" id="view-student"></section>
       <section class="view" id="view-progress"></section>
+      <section class="view" id="view-packages"></section>
     </main>
 
     <nav class="bottom-nav">
@@ -173,6 +152,7 @@
         <button class="nav-btn active" data-view="list">Состав</button>
         <button class="nav-btn" data-view="student">Ученик</button>
         <button class="nav-btn" data-view="progress">Прогресс</button>
+        <button class="nav-btn" data-view="packages">Пакеты</button>
       </div>
     </nav>
   </div>
@@ -193,27 +173,30 @@
     month: 8,
     year: 2025,
     query: '',
-    selectedStudentId: 'u2',
     editUnlocked: false,
+    selectedStudentId: 'u2',
+    groupLimit: 20,
+    groupTotal: 15,
     store: new Map(),
     studentPool: [
-      {id:'sp1', fullName:'Смирнов Егор', packageLabel:'Блок 8', packageNumber:7, packageTotal:8, startDate:'2025-07-05', activeUntil:'2025-08-02', price:3000, paid:3000, discount:0},
-      {id:'sp2', fullName:'Зайцева Полина', packageLabel:'Блок 4', packageNumber:3, packageTotal:4, startDate:'2025-08-09', activeUntil:'2025-09-06', price:2000, paid:1500, discount:0},
-      {id:'sp3', fullName:'Кузнецов Максим', packageLabel:'Пробная', packageNumber:1, packageTotal:1, startDate:'2025-09-05', activeUntil:'2025-09-05', price:0, paid:0, discount:0}
+      {id:'sp1', fullName:'Смирнов Егор', packageLabel:'Блок 8', packageType:'block', packageTotal:8, packageNumber:7, startDate:'2025-07-05', activeUntil:'2025-08-02', price:3000, paid:3000, discount:0},
+      {id:'sp2', fullName:'Зайцева Полина', packageLabel:'Блок 4', packageType:'block', packageTotal:4, packageNumber:3, startDate:'2025-08-09', activeUntil:'2025-09-06', price:2000, paid:1500, discount:0},
+      {id:'sp3', fullName:'Кузнецов Максим', packageLabel:'Пробная', packageType:'trial', packageTotal:1, packageNumber:1, startDate:'2025-09-05', activeUntil:'2025-09-05', price:0, paid:0, discount:0}
     ],
     groupPool: [
-      {id:'gp1', fullName:'Лазарев Никита', packageLabel:'Блок 12', packageNumber:4, packageTotal:12, startDate:'2025-06-01', activeUntil:'2025-06-29', price:4000, paid:4000, discount:0},
-      {id:'gp2', fullName:'Тарасова Вера', packageLabel:'Блок 8', packageNumber:5, packageTotal:8, startDate:'2025-07-14', activeUntil:'2025-08-11', price:3000, paid:3000, discount:0}
+      {id:'gp1', fullName:'Лазарев Никита', packageLabel:'Блок 12', packageType:'block', packageTotal:12, packageNumber:4, startDate:'2025-06-01', activeUntil:'2025-06-29', price:4000, paid:4000, discount:0},
+      {id:'gp2', fullName:'Тарасова Вера', packageLabel:'Блок 8', packageType:'block', packageTotal:8, packageNumber:5, startDate:'2025-07-14', activeUntil:'2025-08-11', price:3000, paid:3000, discount:0}
     ]
   };
 
   const els = {
+    headerSub: document.getElementById('headerSub'),
+    groupStatsBadge: document.getElementById('groupStatsBadge'),
+    globalLockBtn: document.getElementById('globalLockBtn'),
     list: document.getElementById('view-list'),
     student: document.getElementById('view-student'),
     progress: document.getElementById('view-progress'),
-    headerSub: document.getElementById('headerSub'),
-    activeBadge: document.getElementById('activeBadge'),
-    globalLockBadge: document.getElementById('globalLockBadge'),
+    packages: document.getElementById('view-packages'),
     sheetBackdrop: document.getElementById('sheetBackdrop'),
     sheet: document.getElementById('sheet'),
     toast: document.getElementById('toast')
@@ -223,22 +206,16 @@
   function monthKey(){ return `${app.year}-${String(app.month+1).padStart(2,'0')}`; }
   function fullContext(){ return `${app.discipline} • ${app.trainingType} • ${app.group} • ${MONTHS[app.month]} ${app.year}`; }
   function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(s => (s[0] || '').toUpperCase()).join(''); }
-  function nextMonth(y,m){ return m === 11 ? {year:y+1, month:0} : {year:y, month:m+1}; }
   function clone(v){ return JSON.parse(JSON.stringify(v)); }
   function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function formatDate(iso){
-    if(!iso) return '—';
-    const [y,m,d] = String(iso).split('-');
-    if(!y || !m || !d) return iso;
-    return `${d}.${m}.${y}`;
-  }
-  function addDays(iso, days){
-    const dt = new Date(iso + 'T00:00:00');
-    dt.setDate(dt.getDate() + days);
-    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-  }
+  function formatDate(iso){ if(!iso) return '—'; const [y,m,d] = String(iso).split('-'); return y&&m&&d ? `${d}.${m}.${y}` : iso; }
+  function addDays(iso, days){ const dt=new Date(iso+'T00:00:00'); dt.setDate(dt.getDate()+days); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
   function money(v){ return String(v || 0); }
-  function requireUnlocked(msg='Сначала откройте замок'){ if(app.editUnlocked) return true; showToast(msg); return false; }
+  function requireUnlocked(msg='Откройте замок'){ if(app.editUnlocked) return true; showToast(msg); return false; }
+
+  function makeHistory(base){
+    return base || [];
+  }
 
   function createStudent(data){
     const s = {
@@ -246,193 +223,165 @@
       fullName: data.fullName || 'Новый ученик',
       packageType: data.packageType || 'block',
       packageLabel: data.packageLabel || 'Блок 8',
-      packageFront: data.packageFront || (data.packageLabel || 'Блок 8'),
       packageNumber: Number(data.packageNumber || 1),
       packageTotal: Number(data.packageTotal || 8),
       startDate: data.startDate || `${app.year}-${String(app.month+1).padStart(2,'0')}-01`,
-      activeUntil: data.activeUntil || `${app.year}-${String(app.month+1).padStart(2,'0')}-28`,
+      activeUntil: data.activeUntil || `${app.year}-${String(app.month+1).padStart(2,'0')}-29`,
       price: Number(data.price || 0),
       paid: Number(data.paid || 0),
       discount: Number(data.discount || 0),
       active: data.active !== false,
       frozen: !!data.frozen,
-      freezeDays: Number(data.freezeDays || 0),
       extendDays: Number(data.extendDays || 0),
       progressSlots: data.progressSlots || {},
-      monthlyMembership: data.monthlyMembership || monthKey(),
+      seriesTrainings: Number(data.seriesTrainings || 0),
+      avatarMode: data.avatarMode || 'initials',
+      packageHistory: makeHistory(data.packageHistory),
+      monthlyMembership: data.monthlyMembership || monthKey()
     };
+    if(!s.packageHistory.length){
+      s.packageHistory.push({
+        id:'pkg_'+uid(), number:s.packageNumber, label:s.packageLabel, type:s.packageType, total:s.packageTotal,
+        discipline: app.discipline, startDate:s.startDate, activeUntil:s.activeUntil, price:s.price,
+        paid:s.paid, discount:s.discount, progress:'0/'+(s.packageTotal||1), current:true
+      });
+    }
     refreshStudentDerived(s);
     return s;
   }
 
   function createSeedState(){
-    return {
-      students: [
-        createStudent({id:'u1', fullName:'Иванов Иван', packageLabel:'Блок 8', packageTotal:8, packageNumber:4, startDate:'2025-09-02', activeUntil:'2025-09-30', price:3000, paid:3000, progressSlots:{'1':{kind:'block', paymentAmount:0},'4':{kind:'block', paymentAmount:0}}}),
-        createStudent({id:'u2', fullName:'Фролова Анна', packageLabel:'Блок 12', packageTotal:12, packageNumber:9, startDate:'2025-09-01', activeUntil:'2025-09-29', price:4000, paid:2500, progressSlots:{'0':{kind:'block'},'2':{kind:'block'},'6':{kind:'single', paymentAmount:600},'8':{kind:'bonus'}}}),
-        createStudent({id:'u3', fullName:'Петров Пётр', packageLabel:'Пробная', packageType:'trial', packageTotal:1, packageNumber:1, startDate:'2025-09-03', activeUntil:'2025-09-03', price:0, paid:0, progressSlots:{'2':{kind:'trial'}}}),
-        createStudent({id:'u4', fullName:'Ксенофонтов Андрей', packageLabel:'Блок 4', packageTotal:4, packageNumber:12, startDate:'2025-09-04', activeUntil:'2025-10-02', price:2000, paid:1000, progressSlots:{'0':{kind:'block'},'3':{kind:'block'}}, frozen:true}),
-      ]
-    };
+    return { students: [
+      createStudent({id:'u1', fullName:'Иванов Иван', packageLabel:'Блок 8', packageType:'block', packageTotal:8, packageNumber:4, startDate:'2025-09-02', activeUntil:'2025-09-30', price:3000, paid:3000, progressSlots:{'1':{kind:'block', paymentAmount:0, start:'18:30'},'4':{kind:'block', paymentAmount:0, start:'18:30'}}, seriesTrainings:12,
+        packageHistory:[
+          {id:'p11', number:1, label:'Блок 12', type:'block', total:12, discipline:'Кикбоксинг', startDate:'2025-05-01', activeUntil:'2025-05-29', price:4000, paid:4000, discount:0, progress:'12/12', current:false},
+          {id:'p12', number:2, label:'Блок 12', type:'block', total:12, discipline:'Кикбоксинг', startDate:'2025-06-03', activeUntil:'2025-07-01', price:4000, paid:4000, discount:0, progress:'12/12', current:false},
+          {id:'p13', number:3, label:'Блок 8', type:'block', total:8, discipline:'Кикбоксинг', startDate:'2025-08-01', activeUntil:'2025-08-29', price:3000, paid:3000, discount:0, progress:'8/8', current:false},
+          {id:'p14', number:4, label:'Блок 8', type:'block', total:8, discipline:'Кикбоксинг', startDate:'2025-09-02', activeUntil:'2025-09-30', price:3000, paid:3000, discount:0, progress:'2/8', current:true}
+        ]}),
+      createStudent({id:'u2', fullName:'Фролова Анна', packageLabel:'Блок 12', packageType:'block', packageTotal:12, packageNumber:9, startDate:'2025-09-01', activeUntil:'2025-09-29', price:4000, paid:2500, discount:0, progressSlots:{'0':{kind:'block', start:'18:30'},'2':{kind:'block', start:'18:30'},'6':{kind:'single', paymentAmount:600, start:'18:30'},'8':{kind:'bonus', start:'18:30'}}, seriesTrainings:19,
+        packageHistory:[
+          {id:'p21', number:7, label:'Блок 12', type:'block', total:12, discipline:'Кикбоксинг', startDate:'2025-07-01', activeUntil:'2025-07-29', price:4000, paid:4000, discount:0, progress:'12/12', current:false},
+          {id:'p22', number:8, label:'Блок 12', type:'block', total:12, discipline:'Кикбоксинг', startDate:'2025-08-01', activeUntil:'2025-08-29', price:4000, paid:4000, discount:0, progress:'12/12', current:false},
+          {id:'p23', number:9, label:'Блок 12', type:'block', total:12, discipline:'Кикбоксинг', startDate:'2025-09-01', activeUntil:'2025-09-29', price:4000, paid:2500, discount:0, progress:'2/12', current:true}
+        ]}),
+      createStudent({id:'u3', fullName:'Петров Пётр', packageLabel:'Пробная', packageType:'trial', packageTotal:1, packageNumber:1, startDate:'2025-09-03', activeUntil:'2025-09-03', price:0, paid:0, progressSlots:{'2':{kind:'trial', start:'18:30'}}, seriesTrainings:1,
+        packageHistory:[{id:'p31', number:1, label:'Пробная', type:'trial', total:1, discipline:'Кикбоксинг', startDate:'2025-09-03', activeUntil:'2025-09-03', price:0, paid:0, discount:0, progress:'P', current:true}] }),
+      createStudent({id:'u4', fullName:'Ксенофонтов Андрей', packageLabel:'Блок 4', packageType:'block', packageTotal:4, packageNumber:12, startDate:'2025-09-04', activeUntil:'2025-10-02', price:2000, paid:1000, frozen:true, progressSlots:{'0':{kind:'block', start:'18:30'},'3':{kind:'block', start:'18:30'}}, seriesTrainings:8,
+        packageHistory:[{id:'p41', number:12, label:'Блок 4', type:'block', total:4, discipline:'Кикбоксинг', startDate:'2025-09-04', activeUntil:'2025-10-02', price:2000, paid:1000, discount:0, progress:'2/4', current:true}] })
+    ]};
   }
 
-  function monthState(){
-    const key = monthKey();
-    if(!app.store.has(key)) app.store.set(key, createSeedState());
-    return app.store.get(key);
-  }
+  function monthState(){ const key = monthKey(); if(!app.store.has(key)) app.store.set(key, createSeedState()); return app.store.get(key); }
   function students(){ return monthState().students; }
   function activeStudents(){ return students().filter(s => s.active); }
   function getStudent(id){ return students().find(s => s.id === id) || null; }
-  function ensureSelected(){
-    const current = getStudent(app.selectedStudentId);
-    if(current && current.active) return current;
-    const first = activeStudents()[0] || students()[0] || null;
-    app.selectedStudentId = first ? first.id : null;
-    return first;
-  }
+  function ensureSelected(){ const cur=getStudent(app.selectedStudentId); if(cur) return cur; const first=activeStudents()[0]||students()[0]||null; app.selectedStudentId=first?first.id:null; return first; }
   function currentStudent(){ return ensureSelected(); }
 
-  function blockCount(student){
-    return Object.values(student.progressSlots || {}).filter(v => v && v.kind === 'block').length;
-  }
-  function kindCount(student, kind){
-    return Object.values(student.progressSlots || {}).filter(v => v && v.kind === kind).length;
-  }
+  function kindCount(student, kind){ return Object.values(student.progressSlots||{}).filter(v => v && v.kind===kind).length; }
+  function blockCount(student){ return kindCount(student,'block'); }
   function progressText(student){
-    if(student.packageType === 'trial') return kindCount(student,'trial') ? 'P' : '0';
-    if(student.packageType === 'single') return `${kindCount(student,'single')}`;
-    if(student.packageType === 'bonus') return `БОН ${kindCount(student,'bonus')}`;
+    if(student.packageType==='trial') return kindCount(student,'trial') ? 'P' : '0';
+    if(student.packageType==='single') return `${kindCount(student,'single')}`;
+    if(student.packageType==='bonus') return `БОН ${kindCount(student,'bonus')}`;
     return `${blockCount(student)}/${student.packageTotal}`;
   }
-  function computeStreakTrainings(student){
-    const sorted = Object.keys(student.progressSlots || {}).map(n => Number(n)).sort((a,b) => a-b);
-    let streak = 0;
-    let prev = null;
-    for(const idx of sorted){
-      if(prev === null || idx === prev + 1) streak += 1; else streak = 1;
-      prev = idx;
-    }
-    return streak;
-  }
-  function computeStreakDays(student){
-    return Math.min(computeStreakTrainings(student), 7);
+  function currentPackage(student){ return (student.packageHistory||[]).find(p=>p.current) || null; }
+  function computeStreak(student){
+    const arr = Object.keys(student.progressSlots||{}).map(Number).sort((a,b)=>a-b);
+    let streak=0, best=0, prev=null;
+    for(const n of arr){ if(prev===null || n===prev+1) streak += 1; else streak = 1; if(streak>best) best=streak; prev=n; }
+    return {streak, best};
   }
   function refreshStudentDerived(student){
-    student.debt = Math.max(0, Number(student.price || 0) - Number(student.discount || 0) - Number(student.paid || 0));
-    student.streakDays = computeStreakDays(student);
-    student.streakTrainings = computeStreakTrainings(student);
+    student.debt = Math.max(0, Number(student.price||0)-Number(student.discount||0)-Number(student.paid||0));
+    const st = computeStreak(student);
+    student.streak = st.streak;
+    if(!student.seriesTrainings) student.seriesTrainings = Object.keys(student.progressSlots||{}).length;
+    const cp = currentPackage(student);
+    if(cp){
+      cp.paid = student.paid; cp.discount = student.discount; cp.price = student.price; cp.startDate = student.startDate; cp.activeUntil = student.activeUntil;
+      cp.progress = progressText(student);
+    }
   }
   function statusChip(student){
     refreshStudentDerived(student);
+    if(!student.active) return {text:'Выкл', cls:'off'};
     if(student.frozen) return {text:'Заморожен', cls:'frozen'};
-    if(student.debt > 0) return {text:'Долг', cls:'debt'};
+    if(student.debt>0) return {text:'Долг', cls:'debt'};
     return {text:'Активен', cls:'ok'};
   }
 
-  function datesMWF(y,m,count=10){
-    const d = new Date(y,m,1);
-    while(d.getDay() !== 1){ d.setDate(d.getDate()+1); }
-    const out = [];
-    while(out.length < count){
-      if([1,3,5].includes(d.getDay())) out.push(new Date(d));
-      d.setDate(d.getDate()+1);
-    }
-    return out;
-  }
+  function datesMWF(y,m,count=10){ const d=new Date(y,m,1); while(d.getDay()!==1){ d.setDate(d.getDate()+1); } const out=[]; while(out.length<count){ if([1,3,5].includes(d.getDay())) out.push(new Date(d)); d.setDate(d.getDate()+1); } return out; }
   function getSlot(student, idx){ return student.progressSlots[idx] ? clone(student.progressSlots[idx]) : {kind:'empty', paymentAmount:0, arrival:'', start:'18:30'}; }
-  function setSlot(student, idx, slot){ if(!student.progressSlots) student.progressSlots = {}; if(!slot || slot.kind === 'empty') delete student.progressSlots[idx]; else student.progressSlots[idx] = slot; refreshStudentDerived(student); }
-  function ordinalForKind(student, idx, kind){
-    return Object.keys(student.progressSlots || {}).map(n => Number(n)).sort((a,b)=>a-b).filter(i => i <= idx && student.progressSlots[i] && student.progressSlots[i].kind === kind).length;
-  }
+  function setSlot(student, idx, slot){ if(!student.progressSlots) student.progressSlots={}; if(!slot || slot.kind==='empty') delete student.progressSlots[idx]; else student.progressSlots[idx]=slot; refreshStudentDerived(student); }
+  function ordinalForKind(student, idx, kind){ return Object.keys(student.progressSlots||{}).map(Number).sort((a,b)=>a-b).filter(i => i<=idx && student.progressSlots[i] && student.progressSlots[i].kind===kind).length; }
   function slotVisual(student, idx){
     const slot = getSlot(student, idx);
-    if(!slot || slot.kind === 'empty') return {cls:'empty', main:'+', sub:'добавить факт', pay:''};
-    if(slot.kind === 'block') return {cls:'block', main:`${ordinalForKind(student, idx, 'block')}/${student.packageTotal}`, sub:'из пакета', pay:slot.paymentAmount ? '₽' : ''};
-    if(slot.kind === 'trial') return {cls:'trial', main:'P', sub:'пробная', pay:slot.paymentAmount ? '₽' : ''};
-    if(slot.kind === 'single') return {cls:'single', main:`${ordinalForKind(student, idx, 'single')}`, sub:'разовая', pay:slot.paymentAmount ? '₽' : ''};
-    if(slot.kind === 'bonus') return {cls:'bonus', main:`БОН ${ordinalForKind(student, idx, 'bonus')}`, sub:'бонус', pay:slot.paymentAmount ? '₽' : ''};
-    return {cls:'empty', main:'+', sub:'добавить факт', pay:''};
+    if(!slot || slot.kind==='empty') return {cls:'empty', main:'+', sub:'', pay:''};
+    if(slot.kind==='block') return {cls:'block', main:`${ordinalForKind(student, idx, 'block')}/${student.packageTotal}`, sub:'', pay:slot.paymentAmount ? '₽' : ''};
+    if(slot.kind==='trial') return {cls:'trial', main:'P', sub:'', pay:slot.paymentAmount ? '₽' : ''};
+    if(slot.kind==='single') return {cls:'single', main:`${ordinalForKind(student, idx, 'single')}`, sub:'', pay:slot.paymentAmount ? '₽' : ''};
+    if(slot.kind==='bonus') return {cls:'bonus', main:`БОН ${ordinalForKind(student, idx, 'bonus')}`, sub:'', pay:slot.paymentAmount ? '₽' : ''};
+    return {cls:'empty', main:'+', sub:'', pay:''};
   }
 
   function render(){
+    const act = activeStudents().length;
     els.headerSub.textContent = fullContext();
-    els.activeBadge.textContent = `Активных: ${activeStudents().length}`;
-    els.globalLockBadge.textContent = app.editUnlocked ? '🔓 Изменения открыты' : '🔒 Изменения закрыты';
-    els.globalLockBadge.classList.toggle('unlocked', app.editUnlocked);
-    renderList();
-    renderStudent();
-    renderProgress();
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === app.view));
+    els.groupStatsBadge.textContent = `${act} / ${app.groupTotal} / ${app.groupLimit}`;
+    els.globalLockBtn.textContent = app.editUnlocked ? '🔓' : '🔒';
+    els.globalLockBtn.classList.toggle('unlocked', app.editUnlocked);
+    renderList(); renderStudent(); renderProgress(); renderPackages();
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view===app.view));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(`view-${app.view}`).classList.add('active');
   }
 
   function renderList(){
-    const rows = activeStudents().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
-    if(!rows.some(s => s.id === app.selectedStudentId) && rows[0]) app.selectedStudentId = rows[0].id;
-
+    const rows = students().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
     els.list.innerHTML = `
       <div class="card">
-        <div class="section-title">Действия</div>
-        <div class="section-sub">Только действия состава группы. Массовый перенос отсюда убран.</div>
-        <button class="btn green small" id="btnAddToGroup">Добавить в группу</button>
-      </div>
-      <div class="card">
-        <div class="section-title">Контекст</div>
-        <div class="section-sub">Дисциплина, тип, группа, месяц и год</div>
-        <div class="context-grid">
-          <label class="field"><span>Дисциплина</span><select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select></label>
-          <label class="field"><span>Тип</span><select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select></label>
-          <label class="field"><span>Группа</span><select id="f-group"><option ${app.group==='Группа A'?'selected':''}>Группа A</option><option ${app.group==='Группа B'?'selected':''}>Группа B</option></select></label>
-          <label class="field"><span>Месяц</span><select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select></label>
-          <label class="field"><span>Год</span><select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select></label>
-          <label class="field"><span>Поиск</span><input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" /></label>
+        <div class="toolbar">
+          <button class="btn green small" id="btnAddToGroup">Добавить ученика в группу</button>
+          <div class="chip">${activeStudents().length}</div>
         </div>
       </div>
       <div class="card">
-        <div class="section-title">Состав месяца</div>
-        <div class="section-sub">Показываются только активные ученики выбранной группы и месяца</div>
-        <div class="student-list" id="studentList"></div>
+        <div class="context-grid">
+          <select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select>
+          <select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select>
+          <select id="f-group"><option ${app.group==='Группа A'?'selected':''}>Группа A</option><option ${app.group==='Группа B'?'selected':''}>Группа B</option></select>
+          <select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select>
+          <select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select>
+          <input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" />
+        </div>
       </div>
+      <div class="list-wrap">${rows.map(listRowHtml).join('')}</div>
     `;
-    const list = els.list.querySelector('#studentList');
-    if(!rows.length){
-      list.innerHTML = `<div class="hint">В выбранном контексте активных учеников нет.</div>`;
-    } else {
-      list.innerHTML = rows.map(studentCardHtml).join('');
-    }
     bindList();
   }
 
-  function studentCardHtml(student){
+  function listRowHtml(student){
     const st = statusChip(student);
     return `
-      <article class="student-card ${app.selectedStudentId===student.id ? 'selected' : ''}" data-open-student-card="${student.id}">
-        <div class="student-head">
-          <div class="avatar">${initials(student.fullName)}</div>
-          <div class="main">
-            <div class="fio">${esc(student.fullName)}</div>
-            <div class="meta">
-              <div class="chip">Пакет № ${student.packageNumber}</div>
-              <div class="chip">${esc(student.packageLabel)}</div>
-              <div class="chip ${st.cls}">${st.text}</div>
-            </div>
-            <div class="subline">Активен по: ${formatDate(student.activeUntil)}</div>
+      <article class="row ${app.selectedStudentId===student.id ? 'selected':''}" data-open-student="${student.id}">
+        <div class="avatar">${initials(student.fullName)}</div>
+        <div class="row-main">
+          <div class="fio">${esc(student.fullName)}</div>
+          <div class="row-meta">
+            <div class="chip">№ ${student.packageNumber}</div>
+            <div class="chip">${esc(student.packageLabel)}</div>
           </div>
-          <div class="side-actions">
-            <button class="icon-btn danger" data-exclude-list="${student.id}" title="Исключить из месяца">⨯</button>
-            <button class="icon-btn" data-go-progress="${student.id}" title="К прогрессу">▦</button>
+          <div class="row-kpis">
+            <div>Оплачено: ${money(student.paid)}</div>
+            <div>Долг: ${money(student.debt)}</div>
           </div>
         </div>
-        <div class="kpis">
-          <div class="kpi"><div class="label">Оплачено</div><div class="value">${money(student.paid)}</div></div>
-          <div class="kpi"><div class="label">Долг</div><div class="value">${money(student.debt)}</div></div>
-          <div class="kpi"><div class="label">Прогресс</div><div class="value">${esc(progressText(student))}</div></div>
-        </div>
-        <div class="card-footer">
-          <div class="subline">Дата пакета: ${formatDate(student.startDate)}</div>
-          <div class="linkish">Открыть →</div>
+        <div class="row-side">
+          <button class="status-btn ${student.active ? 'ok' : 'off'}" data-toggle-active="${student.id}">${student.active ? 'ON' : 'OFF'}</button>
+          <div class="chip ${st.cls}">${st.text}</div>
         </div>
       </article>
     `;
@@ -440,51 +389,45 @@
 
   function renderStudent(){
     const student = currentStudent();
-    if(!student){
-      els.student.innerHTML = `<div class="card"><div class="section-title">Ученик</div><div class="hint">Сначала выберите ученика в составе.</div></div>`;
-      return;
-    }
+    if(!student){ els.student.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
     const st = statusChip(student);
+    const payBtnLabel = student.debt > 0 && student.paid > 0 ? 'Внести доплату' : 'Внести оплату';
+    const cp = currentPackage(student);
     els.student.innerHTML = `
       <div class="card hero">
         <div class="hero-top">
-          <div class="hero-avatar">${initials(student.fullName)}</div>
+          <div class="hero-avatar" id="avatarBtn">${initials(student.fullName)}</div>
           <div>
             <h2>${esc(student.fullName)}</h2>
-            <div class="meta" style="margin-top:8px">
+            <div class="row-meta" style="margin-top:8px">
               <div class="chip">Пакет № ${student.packageNumber}</div>
               <div class="chip">${esc(student.packageLabel)}</div>
-              <div class="chip ${st.cls}">${st.text}</div>
+              <button class="chip ${st.cls}" id="toggleStudentState">${st.text}</button>
             </div>
+            <div class="mini-note">Срок действия пакета: ${formatDate(student.startDate)} — ${formatDate(student.activeUntil)}</div>
           </div>
-          <button class="lock-chip ${app.editUnlocked ? 'unlocked' : ''}" id="studentLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
+          <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="studentLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
         </div>
         <div class="facts">
           <div class="fact"><div class="label">Дата начала пакета</div><div class="value">${formatDate(student.startDate)}</div></div>
           <div class="fact"><div class="label">Активен по</div><div class="value">${formatDate(student.activeUntil)}</div></div>
-          <div class="fact"><div class="label">Стоимость пакета</div><div class="value">${money(student.price)}</div></div>
+          <div class="fact"><div class="label">Стоимость</div><div class="value">${money(student.price)}</div></div>
           <div class="fact"><div class="label">Скидка</div><div class="value">${money(student.discount)}</div></div>
           <div class="fact"><div class="label">Оплачено</div><div class="value">${money(student.paid)}</div></div>
           <div class="fact"><div class="label">Долг</div><div class="value">${money(student.debt)}</div></div>
           <div class="fact"><div class="label">Прогресс</div><div class="value">${esc(progressText(student))}</div></div>
-          <div class="fact"><div class="label">Подрядность дней</div><div class="value">${student.streakDays}</div></div>
-          <div class="fact"><div class="label">Серия тренировок</div><div class="value">${student.streakTrainings}</div></div>
-          <div class="fact"><div class="label">Продление</div><div class="value">+${student.extendDays || 0} дней</div></div>
+          <div class="fact"><div class="label">Подрядность</div><div class="value">${student.streak}</div></div>
+          <div class="fact"><div class="label">Серия</div><div class="value">${student.seriesTrainings}</div></div>
+          <div class="fact"><div class="label">Продление</div><div class="value">+${student.extendDays || 0}</div></div>
         </div>
       </div>
       <div class="card">
-        <div class="section-title">Действия по ученику</div>
-        <div class="section-sub">Все изменения защищены общим замком и подтверждением для опасных действий</div>
-        <div class="grid-2">
+        <div class="actions">
           <button class="btn small ${student.frozen ? 'blue' : 'warn'}" id="btnFreeze">${student.frozen ? 'Снять заморозку' : 'Заморозить'}</button>
-          <button class="btn small blue" id="btnExtend">Продлить пакет +7 дней</button>
-          <button class="btn small" id="btnPayStudent">Внести оплату</button>
-          <button class="btn small danger" id="btnExcludeStudent">Исключить из месяца</button>
+          <button class="btn small blue" id="btnExtend">Продлить пакет +7</button>
+          <button class="btn small" id="btnPayStudent">${payBtnLabel}</button>
+          <button class="btn small ${student.active ? 'danger' : 'green'}" id="btnToggleFromStudent">${student.active ? 'Выключить ученика' : 'Включить ученика'}</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="section-title">Примечание</div>
-        <div class="hint">В карточке показывается только текущий активный пакет. История пакетов и глубокий профиль ученика сюда не выводятся.</div>
       </div>
     `;
     bindStudent();
@@ -492,56 +435,36 @@
 
   function renderProgress(){
     const student = currentStudent();
-    if(!student){
-      els.progress.innerHTML = `<div class="card"><div class="section-title">Прогресс</div><div class="hint">Сначала выберите ученика в составе.</div></div>`;
-      return;
-    }
+    if(!student){ els.progress.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
     const days = datesMWF(app.year, app.month, 10);
     els.progress.innerHTML = `
       <div class="card">
-        <div class="progress-top">
-          <div>
-            <div class="section-title">Прогресс месяца</div>
-            <div class="section-sub">Тап по пустой дате добавляет факт только при открытом замке. Для редактирования занятой даты — sheet.</div>
+        <div class="progress-head">
+          <div class="row-meta">
+            <div class="chip">${esc(student.fullName)}</div>
+            <div class="chip">№ ${student.packageNumber}</div>
+            <div class="chip">${esc(student.packageLabel)}</div>
           </div>
-          <button class="lock-chip ${app.editUnlocked ? 'unlocked' : ''}" id="progressLockBtn">${app.editUnlocked ? '🔓 Открыто' : '🔒 Закрыто'}</button>
-        </div>
-        <div class="meta" style="margin-bottom:12px">
-          <div class="chip">${esc(student.fullName)}</div>
-          <div class="chip">Пакет № ${student.packageNumber}</div>
-          <div class="chip">${esc(student.packageLabel)}</div>
+          <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="progressLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
         </div>
         <div class="month-strip"><div class="days">${days.map((d,i)=>dayCard(student,d,i)).join('')}</div></div>
-      </div>
-      <div class="card">
-        <div class="section-title">Легенда</div>
-        <div class="legend">
-          <div class="chip">1/12, 2/12 — тренировка из блока</div>
-          <div class="chip">P — пробная</div>
-          <div class="chip">1, 2, 3 — разовые тренировки месяца</div>
-          <div class="chip">БОН 1, БОН 2 — бонусы месяца</div>
-          <div class="chip">₽ — к факту привязана оплата</div>
-        </div>
-        <div style="height:10px"></div>
-        <div class="hint">Фиксированные суммы из оплаты убраны. Оплата вносится полной суммой или вручную как частичная.</div>
       </div>
     `;
     bindProgress();
   }
 
   function dayCard(student, date, idx){
-    const v = slotVisual(student, idx);
-    const slot = getSlot(student, idx);
+    const v = slotVisual(student, idx); const slot=getSlot(student, idx);
     return `
       <article class="day-card">
-        <div class="day-head">
+        <div>
           <div class="day-date">${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}</div>
           <div class="day-dow">${WEEK[date.getDay()]}</div>
         </div>
         <button class="slot ${v.cls}" data-slot-idx="${idx}">
           ${v.pay ? `<div class="payMark">${v.pay}</div>` : ''}
           <div class="mainMark">${v.main}</div>
-          <div class="slotSub">${v.sub}</div>
+          ${v.sub ? `<div class="slotSub">${v.sub}</div>` : ''}
         </button>
         <div class="time-meta">
           <div>Старт: ${slot.start || '18:30'}</div>
@@ -551,103 +474,110 @@
     `;
   }
 
+  function renderPackages(){
+    const student = currentStudent();
+    if(!student){ els.packages.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
+    const history = (student.packageHistory || []).slice().sort((a,b)=>a.number-b.number);
+    els.packages.innerHTML = `
+      <div class="package-list">
+        ${history.map(pkg => `
+          <article class="package-card">
+            <div class="package-top">
+              <div>
+                <div class="pkg-title">Пакет № ${pkg.number} • ${esc(pkg.label)}</div>
+                <div class="mini-note">${esc(pkg.discipline || app.discipline)} • ${formatDate(pkg.startDate)} — ${formatDate(pkg.activeUntil)}</div>
+              </div>
+              ${pkg.current ? '<div class="chip ok">Текущий</div>' : '<div class="chip">История</div>'}
+            </div>
+            <div class="pkg-meta">
+              <div class="chip">Прогресс ${esc(pkg.progress || '0')}</div>
+              <div class="chip">Стоимость ${money(pkg.price)}</div>
+              <div class="chip">Оплачено ${money(pkg.paid)}</div>
+              <div class="chip">Скидка ${money(pkg.discount)}</div>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
   function bindList(){
     els.list.querySelector('#btnAddToGroup').onclick = openAddToGroupSheet;
-    ['discipline','type','group','month','year'].forEach(k => {
-      els.list.querySelector(`#f-${k}`).onchange = applyFilters;
-    });
+    ['discipline','type','group','month','year'].forEach(k => els.list.querySelector(`#f-${k}`).onchange = applyFilters);
     els.list.querySelector('#f-search').addEventListener('input', applyFilters);
-    els.list.querySelectorAll('[data-open-student-card]').forEach(card => card.onclick = (e) => {
+    els.list.querySelectorAll('[data-open-student]').forEach(row => row.onclick = (e) => {
       if(e.target.closest('button')) return;
-      app.selectedStudentId = e.currentTarget.dataset.openStudentCard;
+      app.selectedStudentId = e.currentTarget.dataset.openStudent;
       app.view = 'student';
       render();
     });
-    els.list.querySelectorAll('[data-go-progress]').forEach(btn => btn.onclick = (e) => {
+    els.list.querySelectorAll('[data-toggle-active]').forEach(btn => btn.onclick = (e) => {
       e.stopPropagation();
-      app.selectedStudentId = e.currentTarget.dataset.goProgress;
-      app.view = 'progress';
-      render();
-    });
-    els.list.querySelectorAll('[data-exclude-list]').forEach(btn => btn.onclick = (e) => {
-      e.stopPropagation();
-      const id = e.currentTarget.dataset.excludeList;
       if(!requireUnlocked()) return;
-      confirmAction('Исключить ученика из текущего месяца?', () => excludeFromMonth(id));
+      const student = getStudent(e.currentTarget.dataset.toggleActive);
+      if(!student) return;
+      const msg = student.active ? 'Выключить ученика?' : 'Включить ученика?';
+      confirmAction(msg, () => {
+        student.active = !student.active;
+        closeSheet();
+        if(!student.active && app.selectedStudentId === student.id) app.selectedStudentId = activeStudents()[0]?.id || students()[0]?.id || null;
+        render();
+        showToast(student.active ? 'Ученик включён' : 'Ученик выключен');
+      });
     });
   }
 
   function bindStudent(){
-    const student = currentStudent();
-    if(!student) return;
+    const student=currentStudent(); if(!student) return;
     els.student.querySelector('#studentLockBtn').onclick = toggleLock;
+    els.student.querySelector('#avatarBtn').onclick = openAvatarSheet;
+    els.student.querySelector('#toggleStudentState').onclick = () => {
+      if(!requireUnlocked()) return;
+      const msg = student.active ? 'Выключить ученика?' : 'Включить ученика?';
+      confirmAction(msg, () => {
+        student.active = !student.active; closeSheet(); render(); showToast(student.active ? 'Ученик включён' : 'Ученик выключен');
+      });
+    };
+    els.student.querySelector('#btnToggleFromStudent').onclick = () => {
+      if(!requireUnlocked()) return;
+      const msg = student.active ? 'Выключить ученика?' : 'Включить ученика?';
+      confirmAction(msg, () => {
+        student.active = !student.active; closeSheet(); render(); showToast(student.active ? 'Ученик включён' : 'Ученик выключен');
+      });
+    };
     els.student.querySelector('#btnFreeze').onclick = () => {
       if(!requireUnlocked()) return;
-      student.frozen = !student.frozen;
-      render();
-      showToast(student.frozen ? 'Пакет заморожен' : 'Заморозка снята');
+      student.frozen = !student.frozen; render(); showToast(student.frozen ? 'Пакет заморожен' : 'Заморозка снята');
     };
     els.student.querySelector('#btnExtend').onclick = () => {
       if(!requireUnlocked()) return;
-      student.extendDays = Number(student.extendDays || 0) + 7;
-      student.activeUntil = addDays(student.activeUntil, 7);
-      render();
-      showToast('Продление пакета: +7 дней');
+      student.extendDays = Number(student.extendDays||0) + 7; student.activeUntil = addDays(student.activeUntil, 7);
+      render(); showToast('Продление пакета: +7 дней');
     };
-    els.student.querySelector('#btnPayStudent').onclick = () => {
-      if(!requireUnlocked()) return;
-      openPaymentSheet(student);
-    };
-    els.student.querySelector('#btnExcludeStudent').onclick = () => {
-      if(!requireUnlocked()) return;
-      confirmAction('Исключить ученика из текущего месяца?', () => excludeFromMonth(student.id));
-    };
+    els.student.querySelector('#btnPayStudent').onclick = () => { if(!requireUnlocked()) return; openPaymentSheet(student); };
   }
 
   function bindProgress(){
-    const student = currentStudent();
-    if(!student) return;
+    const student=currentStudent(); if(!student) return;
     els.progress.querySelector('#progressLockBtn').onclick = toggleLock;
     els.progress.querySelectorAll('[data-slot-idx]').forEach(btn => {
-      const idx = Number(btn.dataset.slotIdx);
-      let timer = null;
-      let longPressed = false;
-      const start = (e) => {
-        e.preventDefault();
-        longPressed = false;
-        timer = setTimeout(() => { longPressed = true; openSlotSheet(student, idx); }, 420);
-      };
+      const idx = Number(btn.dataset.slotIdx); let timer=null, longPressed=false;
+      const start = (e) => { e.preventDefault(); longPressed=false; timer=setTimeout(() => { longPressed=true; openSlotSheet(student, idx); }, 420); };
       const clear = () => clearTimeout(timer);
       const end = (e) => {
-        e.preventDefault();
-        clearTimeout(timer);
-        if(longPressed) return;
-        const slot = getSlot(student, idx);
-        if(slot.kind && slot.kind !== 'empty'){
-          openSlotSheet(student, idx);
-          return;
-        }
+        e.preventDefault(); clearTimeout(timer); if(longPressed) return;
+        const slot=getSlot(student, idx);
+        if(slot.kind && slot.kind!=='empty'){ openSlotSheet(student, idx); return; }
         if(!requireUnlocked()) return;
-        quickAddBlock(student, idx);
+        if(student.packageType==='block'){ setSlot(student, idx, {kind:'block', paymentAmount:0, start:'18:30', arrival:''}); render(); showToast('Тренировка отмечена'); }
+        else { openSlotSheet(student, idx); }
       };
       btn.addEventListener('touchstart', start, {passive:false});
       btn.addEventListener('touchend', end, {passive:false});
       btn.addEventListener('touchmove', clear, {passive:false});
-      btn.addEventListener('mousedown', start);
-      btn.addEventListener('mouseup', end);
-      btn.addEventListener('mouseleave', clear);
+      btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', end); btn.addEventListener('mouseleave', clear);
       btn.addEventListener('contextmenu', (e) => { e.preventDefault(); openSlotSheet(student, idx); });
     });
-  }
-
-  function quickAddBlock(student, idx){
-    if(student.packageType !== 'block'){
-      openSlotSheet(student, idx);
-      return;
-    }
-    setSlot(student, idx, {kind:'block', paymentAmount:0, start:'18:30', arrival:''});
-    render();
-    showToast('Добавлена тренировка из пакета');
   }
 
   function applyFilters(){
@@ -657,41 +587,24 @@
     app.month = Number(els.list.querySelector('#f-month').value);
     app.year = Number(els.list.querySelector('#f-year').value);
     app.query = els.list.querySelector('#f-search').value.trim();
-    monthState();
-    ensureSelected();
-    render();
+    monthState(); ensureSelected(); render();
   }
 
-  function toggleLock(){
-    app.editUnlocked = !app.editUnlocked;
-    render();
-    showToast(app.editUnlocked ? 'Изменения открыты' : 'Изменения закрыты');
-  }
-
-  function excludeFromMonth(id){
-    const student = getStudent(id);
-    if(!student) return;
-    student.active = false;
-    if(app.selectedStudentId === id) app.selectedStudentId = activeStudents()[0]?.id || null;
-    closeSheet();
-    app.view = 'list';
-    render();
-    showToast('Ученик исключён из текущего месяца');
-  }
+  function toggleLock(){ app.editUnlocked = !app.editUnlocked; render(); showToast(app.editUnlocked ? 'Изменения открыты' : 'Изменения закрыты'); }
 
   function openAddToGroupSheet(mode='create'){
     setSheet(`
       <div class="sheet-head">
         <div>
-          <div class="sheet-title">Добавить в группу</div>
-          <div class="sheet-sub">Создать нового, взять из базы учеников или вернуть из этой группы</div>
+          <div class="sheet-title">Добавить ученика в группу</div>
         </div>
         <button class="close" data-close-sheet>×</button>
       </div>
       <div class="segment">
-        <button class="btn small ${mode==='create'?'active':''}" data-add-mode="create">Создать нового</button>
+        <button class="btn small ${mode==='create'?'active':''}" data-add-mode="create">Новый</button>
         <button class="btn small ${mode==='pool'?'active':''}" data-add-mode="pool">Из списка</button>
         <button class="btn small ${mode==='group'?'active':''}" data-add-mode="group">Из группы</button>
+        <button class="btn small ${mode==='extra'?'active':''}" data-add-mode="extra">Во 2-ю</button>
       </div>
       <div id="addModeBody"></div>
     `);
@@ -700,215 +613,161 @@
   }
 
   function renderAddMode(mode){
-    const body = els.sheet.querySelector('#addModeBody');
-    if(!body) return;
-    if(mode === 'create'){
+    const body = els.sheet.querySelector('#addModeBody'); if(!body) return;
+    if(mode==='create'){
       body.innerHTML = `
         <div class="sheet-group">
           <label class="field"><span>ФИО</span><input id="new-name" placeholder="Фамилия Имя" /></label>
-          <div class="grid-2">
+          <div class="context-grid">
             <label class="field"><span>Пакет</span><select id="new-package"><option value="4">Блок 4</option><option value="8" selected>Блок 8</option><option value="12">Блок 12</option><option value="trial">Пробная</option></select></label>
             <label class="field"><span>Оплачено</span><input id="new-paid" inputmode="numeric" value="0" /></label>
           </div>
           <button class="btn green" id="save-new-student">Добавить в группу</button>
-        </div>
-      `;
+        </div>`;
       body.querySelector('#save-new-student').onclick = () => {
         if(!requireUnlocked()) return;
-        const name = body.querySelector('#new-name').value.trim();
-        const pkg = body.querySelector('#new-package').value;
-        const paid = Number(body.querySelector('#new-paid').value || 0);
+        const name = body.querySelector('#new-name').value.trim(); const pkg = body.querySelector('#new-package').value; const paid=Number(body.querySelector('#new-paid').value||0);
         if(!name){ showToast('Введите ФИО'); return; }
         const dto = packagePreset(pkg, paid);
         students().push(createStudent({fullName:name, ...dto, monthlyMembership:monthKey()}));
-        closeSheet();
-        render();
-        showToast('Новый ученик добавлен в группу');
+        app.groupTotal += 1; closeSheet(); render(); showToast('Ученик добавлен');
       };
       return;
     }
-    if(mode === 'pool'){
-      body.innerHTML = `<div class="sheet-group"><div class="list-choices">${app.studentPool.map(p => choiceHtml(p,'pool')).join('')}</div></div>`;
+    if(mode==='pool'){
+      body.innerHTML = `<div class="sheet-group">${app.studentPool.map(p => choiceHtml(p,'pool')).join('')}</div>`;
       body.querySelectorAll('[data-add-pool]').forEach(btn => btn.onclick = () => {
         if(!requireUnlocked()) return;
-        const src = app.studentPool.find(x => x.id === btn.dataset.addPool);
-        if(!src) return;
-        students().push(createStudent({...src, id:uid(), monthlyMembership:monthKey()}));
-        closeSheet(); render(); showToast('Ученик из базы добавлен в группу');
+        const src=app.studentPool.find(x=>x.id===btn.dataset.addPool); if(!src) return;
+        students().push(createStudent({...src, id:uid(), monthlyMembership:monthKey()})); app.groupTotal += 1; closeSheet(); render(); showToast('Ученик добавлен');
       });
       return;
     }
-    body.innerHTML = `<div class="sheet-group"><div class="list-choices">${app.groupPool.map(p => choiceHtml(p,'group')).join('')}</div></div>`;
-    body.querySelectorAll('[data-add-group]').forEach(btn => btn.onclick = () => {
-      if(!requireUnlocked()) return;
-      const src = app.groupPool.find(x => x.id === btn.dataset.addGroup);
-      if(!src) return;
-      students().push(createStudent({...src, id:uid(), monthlyMembership:monthKey()}));
-      closeSheet(); render(); showToast('Ученик возвращён из состава группы');
-    });
+    if(mode==='group'){
+      body.innerHTML = `<div class="sheet-group">${app.groupPool.map(p => choiceHtml(p,'group')).join('')}</div>`;
+      body.querySelectorAll('[data-add-group]').forEach(btn => btn.onclick = () => {
+        if(!requireUnlocked()) return;
+        const src=app.groupPool.find(x=>x.id===btn.dataset.addGroup); if(!src) return;
+        students().push(createStudent({...src, id:uid(), monthlyMembership:monthKey()})); app.groupTotal += 1; closeSheet(); render(); showToast('Ученик возвращён');
+      });
+      return;
+    }
+    body.innerHTML = `
+      <div class="sheet-group">
+        <div class="choice">
+          <div>
+            <div class="name">Добавить ученика в ещё одну группу</div>
+            <div class="meta">Двусторонний ход: ученик → группа</div>
+          </div>
+          <button class="btn small" id="extraGroupBtn">Открыть</button>
+        </div>
+      </div>`;
+    body.querySelector('#extraGroupBtn').onclick = () => showToast('Ветка «Во 2-ю группу» готова как proto');
   }
 
   function packagePreset(value, paid){
-    if(value === 'trial') return {packageType:'trial', packageLabel:'Пробная', packageTotal:1, packageNumber:1, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, price:0, paid:0, discount:0};
-    const n = Number(value || 8);
-    const price = n === 4 ? 2000 : n === 8 ? 3000 : 4000;
-    return {packageType:'block', packageLabel:`Блок ${n}`, packageTotal:n, packageNumber:1, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-29`, price, paid, discount:0};
+    if(value==='trial') return {packageType:'trial', packageLabel:'Пробная', packageTotal:1, packageNumber:1, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, price:0, paid:0, discount:0, packageHistory:[{id:'pkg'+uid(), number:1, label:'Пробная', type:'trial', total:1, discipline:app.discipline, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, price:0, paid:0, discount:0, progress:'P', current:true}]};
+    const n = Number(value||8), price = n===4 ? 2000 : n===8 ? 3000 : 4000;
+    return {packageType:'block', packageLabel:`Блок ${n}`, packageTotal:n, packageNumber:1, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-29`, price, paid, discount:0, packageHistory:[{id:'pkg'+uid(), number:1, label:`Блок ${n}`, type:'block', total:n, discipline:app.discipline, startDate:`${app.year}-${String(app.month+1).padStart(2,'0')}-01`, activeUntil:`${app.year}-${String(app.month+1).padStart(2,'0')}-29`, price, paid, discount:0, progress:`0/${n}`, current:true}]};
   }
 
-  function choiceHtml(person, type){
-    const attr = type === 'pool' ? `data-add-pool="${person.id}"` : `data-add-group="${person.id}"`;
-    return `
-      <div class="choice">
-        <div>
-          <div class="name">${esc(person.fullName)}</div>
-          <div class="meta">${esc(person.packageLabel)} • Пакет № ${person.packageNumber}</div>
-        </div>
-        <button class="btn small" ${attr}>Добавить</button>
-      </div>
-    `;
+  function choiceHtml(person, type){ const attr = type==='pool' ? `data-add-pool="${person.id}"` : `data-add-group="${person.id}"`; return `<div class="choice"><div><div class="name">${esc(person.fullName)}</div><div class="meta">${esc(person.packageLabel)} • Пакет № ${person.packageNumber}</div></div><button class="btn small" ${attr}>Добавить</button></div>`; }
+
+  function openAvatarSheet(){
+    setSheet(`
+      <div class="sheet-head"><div><div class="sheet-title">Аватарка</div></div><button class="close" data-close-sheet>×</button></div>
+      <div class="sheet-group">
+        <button class="btn" id="avatarCamera">Сфотографировать</button>
+        <button class="btn" id="avatarGallery">Из галереи</button>
+      </div>`);
+    els.sheet.querySelector('#avatarCamera').onclick = () => { closeSheet(); showToast('Камера — proto'); };
+    els.sheet.querySelector('#avatarGallery').onclick = () => { closeSheet(); showToast('Галерея — proto'); };
   }
 
   function openPaymentSheet(student, slotIdx = null){
-    const slot = slotIdx === null ? null : getSlot(student, slotIdx);
+    const title = student.debt > 0 && student.paid > 0 ? 'Внести доплату' : 'Внести оплату';
     setSheet(`
       <div class="sheet-head">
-        <div>
-          <div class="sheet-title">Внести оплату</div>
-          <div class="sheet-sub">${esc(student.fullName)} • долг ${student.debt}${slotIdx!==null ? ` • дата ${slotIdx+1}` : ''}</div>
-        </div>
+        <div><div class="sheet-title">${title}</div><div class="sheet-sub">${esc(student.fullName)} • долг ${student.debt}</div></div>
         <button class="close" data-close-sheet>×</button>
       </div>
       <div class="sheet-group">
         <button class="btn warn" id="pay-full-debt">Закрыть долг полностью</button>
-        <label class="field"><span>Частичная сумма</span><input id="manual-pay" inputmode="numeric" placeholder="Введите сумму вручную" /></label>
-        <button class="btn blue" id="pay-manual">Внести сумму</button>
-      </div>
-    `);
+        <label class="field"><span>Сумма</span><input id="manual-pay" inputmode="numeric" placeholder="Введите сумму" /></label>
+        <button class="btn blue" id="pay-manual">Сохранить</button>
+      </div>`);
     els.sheet.querySelector('#pay-full-debt').onclick = () => applyPayment(student, student.debt, slotIdx);
-    els.sheet.querySelector('#pay-manual').onclick = () => {
-      const amount = Number(els.sheet.querySelector('#manual-pay').value || 0);
-      applyPayment(student, amount, slotIdx);
-    };
+    els.sheet.querySelector('#pay-manual').onclick = () => applyPayment(student, Number(els.sheet.querySelector('#manual-pay').value||0), slotIdx);
   }
 
   function applyPayment(student, amount, slotIdx = null){
-    amount = Number(amount || 0);
-    if(amount <= 0){ showToast('Сумма должна быть больше 0'); return; }
-    student.paid = Number(student.paid || 0) + amount;
-    refreshStudentDerived(student);
-    if(slotIdx !== null){
-      const slot = getSlot(student, slotIdx);
-      slot.paymentAmount = Number(slot.paymentAmount || 0) + amount;
-      setSlot(student, slotIdx, slot);
-    }
-    closeSheet();
-    render();
-    showToast(`Оплата внесена: ${amount}`);
+    amount = Number(amount||0); if(amount<=0){ showToast('Сумма должна быть больше 0'); return; }
+    student.paid = Number(student.paid||0) + amount; refreshStudentDerived(student);
+    if(slotIdx!==null){ const slot=getSlot(student, slotIdx); slot.paymentAmount = Number(slot.paymentAmount||0)+amount; setSlot(student, slotIdx, slot); }
+    closeSheet(); render(); showToast(`Оплата: ${amount}`);
   }
 
   function openSlotSheet(student, idx){
-    const slot = getSlot(student, idx);
+    const slot=getSlot(student, idx);
     setSheet(`
       <div class="sheet-head">
-        <div>
-          <div class="sheet-title">Факт тренировки</div>
-          <div class="sheet-sub">${esc(student.fullName)} • слот ${idx+1} • изменение защищено замком</div>
-        </div>
+        <div><div class="sheet-title">Тренировка</div><div class="sheet-sub">${esc(student.fullName)} • ${idx+1}</div></div>
         <button class="close" data-close-sheet>×</button>
       </div>
       <div class="sheet-group">
-        <div class="section-title" style="font-size:16px">Маркер дня</div>
-        <div class="grid-2">
+        <div class="context-grid">
           <button class="btn small" data-slot-kind="block">Из пакета</button>
           <button class="btn small warn" data-slot-kind="trial">Пробная</button>
           <button class="btn small" data-slot-kind="single">Разовая</button>
-          <button class="btn small" data-slot-kind="bonus">Бонусная</button>
+          <button class="btn small" data-slot-kind="bonus">Бонус</button>
         </div>
       </div>
       <div class="sheet-group">
-        <label class="field"><span>Старт тренировки</span><input id="slot-start" value="${esc(slot.start || '18:30')}" placeholder="18:30" /></label>
-        <label class="field"><span>Время прихода</span><input id="slot-arrival" value="${esc(slot.arrival || '')}" placeholder="например 18:24" /></label>
+        <label class="field"><span>Старт</span><input id="slot-start" value="${esc(slot.start || '18:30')}" placeholder="18:30" /></label>
+        <label class="field"><span>Приход</span><input id="slot-arrival" value="${esc(slot.arrival || '')}" placeholder="18:24" /></label>
       </div>
       <div class="sheet-group">
-        <button class="btn blue" id="slot-pay-btn">Внести оплату</button>
+        <button class="btn blue" id="slot-pay-btn">${student.debt>0 && student.paid>0 ? 'Внести доплату' : 'Внести оплату'}</button>
         <button class="btn danger" id="slot-clear-btn">Очистить слот</button>
-      </div>
-    `);
+      </div>`);
     els.sheet.querySelectorAll('[data-slot-kind]').forEach(btn => btn.onclick = () => {
       if(!requireUnlocked()) return;
-      const next = getSlot(student, idx);
-      next.kind = btn.dataset.slotKind;
-      next.start = els.sheet.querySelector('#slot-start').value.trim() || '18:30';
-      next.arrival = els.sheet.querySelector('#slot-arrival').value.trim();
-      setSlot(student, idx, next);
-      closeSheet();
-      render();
-      showToast('Факт тренировки сохранён');
+      const next = getSlot(student, idx); next.kind = btn.dataset.slotKind; next.start = els.sheet.querySelector('#slot-start').value.trim() || '18:30'; next.arrival = els.sheet.querySelector('#slot-arrival').value.trim();
+      setSlot(student, idx, next); closeSheet(); render(); showToast('Тренировка сохранена');
     });
     els.sheet.querySelector('#slot-pay-btn').onclick = () => {
       if(!requireUnlocked()) return;
-      const next = getSlot(student, idx);
-      next.start = els.sheet.querySelector('#slot-start').value.trim() || '18:30';
-      next.arrival = els.sheet.querySelector('#slot-arrival').value.trim();
-      setSlot(student, idx, next.kind === 'empty' ? {kind:'block', paymentAmount:0, start:next.start, arrival:next.arrival} : next);
-      openPaymentSheet(student, idx);
+      const next = getSlot(student, idx); next.start = els.sheet.querySelector('#slot-start').value.trim() || '18:30'; next.arrival = els.sheet.querySelector('#slot-arrival').value.trim();
+      if(next.kind==='empty') next.kind = student.packageType==='block' ? 'block' : 'single';
+      setSlot(student, idx, next); openPaymentSheet(student, idx);
     };
     els.sheet.querySelector('#slot-clear-btn').onclick = () => {
       if(!requireUnlocked()) return;
-      confirmAction('Очистить слот тренировки?', () => {
-        setSlot(student, idx, null);
-        closeSheet();
-        render();
-        showToast('Слот очищен');
-      });
+      confirmAction('Очистить слот?', () => { setSlot(student, idx, null); closeSheet(); render(); showToast('Слот очищен'); });
     };
   }
 
   function confirmAction(message, onConfirm){
     setSheet(`
-      <div class="sheet-head">
-        <div>
-          <div class="sheet-title">Подтверждение</div>
-          <div class="sheet-sub">${esc(message)}</div>
-        </div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="sheet-group">
-        <button class="btn danger" id="confirmYes">Да, выполнить</button>
-        <button class="btn ghost" id="confirmNo">Отмена</button>
-      </div>
-    `);
-    els.sheet.querySelector('#confirmYes').onclick = onConfirm;
-    els.sheet.querySelector('#confirmNo').onclick = closeSheet;
+      <div class="sheet-head"><div><div class="sheet-title">Подтверждение</div><div class="sheet-sub">${esc(message)}</div></div><button class="close" data-close-sheet>×</button></div>
+      <div class="sheet-group"><button class="btn danger" id="confirmYes">Да</button><button class="btn ghost" id="confirmNo">Отмена</button></div>`);
+    els.sheet.querySelector('#confirmYes').onclick = onConfirm; els.sheet.querySelector('#confirmNo').onclick = closeSheet;
   }
 
-  function setSheet(html){
-    els.sheet.innerHTML = html;
-    els.sheetBackdrop.classList.add('show');
-    els.sheet.querySelectorAll('[data-close-sheet]').forEach(btn => btn.onclick = closeSheet);
-  }
+  function setSheet(html){ els.sheet.innerHTML = html; els.sheetBackdrop.classList.add('show'); els.sheet.querySelectorAll('[data-close-sheet]').forEach(btn => btn.onclick = closeSheet); }
   function closeSheet(){ els.sheetBackdrop.classList.remove('show'); els.sheet.innerHTML = ''; }
   els.sheetBackdrop.addEventListener('click', (e) => { if(e.target === els.sheetBackdrop) closeSheet(); });
 
-  function showToast(text){
-    els.toast.textContent = text;
-    els.toast.classList.add('show');
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => els.toast.classList.remove('show'), 1800);
-  }
+  function showToast(text){ els.toast.textContent = text; els.toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => els.toast.classList.remove('show'), 1800); }
 
   document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => {
-    if((btn.dataset.view === 'student' || btn.dataset.view === 'progress') && !currentStudent()){
-      showToast('Сначала выберите ученика');
-      return;
-    }
-    app.view = btn.dataset.view;
-    render();
+    const target = btn.dataset.view;
+    if((target==='student'||target==='progress'||target==='packages') && !currentStudent()){ showToast('Сначала выберите ученика'); return; }
+    app.view = target; render();
   });
-  els.globalLockBadge.onclick = toggleLock;
+  els.globalLockBtn.onclick = toggleLock;
 
-  monthState();
-  render();
+  monthState(); render();
 })();
 </script>
 </body>
