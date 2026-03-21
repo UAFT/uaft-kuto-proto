@@ -3,1163 +3,857 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>UAFT • KUTO mobile v1</title>
+  <title>UAFT • KUTO Mobile v2</title>
   <style>
     :root{
-      --bg:#0b0b0f;
-      --panel:#14151b;
-      --panel-2:#1a1d26;
-      --line:#262a33;
-      --text:#e7e9f1;
-      --muted:#8b90a1;
-      --accent:#3d7bff;
-      --ok:#2cc26b;
-      --warn:#f1c40f;
-      --bad:#ff5252;
-      --paid:#f0d271;
-      --shadow:0 12px 30px rgba(0,0,0,.32);
-      --radius:18px;
-      --radius-sm:12px;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg:#0b0c11;
+      --panel:#141720;
+      --panel-2:#171b26;
+      --line:#262b38;
+      --text:#edf0f7;
+      --muted:#9da4b8;
+      --blue:#427bff;
+      --green:#34c56e;
+      --yellow:#f0d271;
+      --red:#ff6060;
+      --orange:#f39c12;
+      --chip:#1d2330;
+      --shadow:0 10px 26px rgba(0,0,0,.34);
+      --radius:20px;
+      --radius-sm:14px;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,#09090d 0%,#0b0b10 100%);
-      color:var(--text);
-      font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
-    }
-    button,input,select{font:inherit}
-    .app{
-      width:min(100%, 760px);
-      margin:0 auto;
-      padding:calc(var(--safe-top) + 14px) 12px calc(var(--safe-bottom) + 24px);
-    }
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:30;
-      margin:0 -12px 12px;
-      padding:calc(var(--safe-top) + 12px) 12px 12px;
-      backdrop-filter: blur(16px);
-      background:rgba(11,11,15,.9);
-      border-bottom:1px solid rgba(38,42,51,.9);
-    }
-    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-    .title-wrap h1{margin:0;font-size:24px;line-height:1.05;letter-spacing:.2px}
-    .title-wrap p{margin:6px 0 0;color:var(--muted);font-size:13px}
-    .badge{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:8px 10px;border-radius:999px;background:var(--panel);
-      border:1px solid var(--line);color:var(--muted);font-size:12px;white-space:nowrap;
-    }
-    .section{
-      background:linear-gradient(180deg,rgba(20,21,27,.98),rgba(15,17,24,.98));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      margin-bottom:12px;
-      overflow:hidden;
-    }
-    .section-head{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:14px 14px 0;
-    }
-    .section-head h2,.section-head h3{margin:0;font-size:16px}
-    .section-sub{color:var(--muted);font-size:12px}
-    .controls,
-    .list,
-    .detail,
-    .matrix-wrap,
-    .footer-actions{padding:14px}
-    .actions-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      padding:14px;
-    }
-    .actions-grid .full{grid-column:1/-1}
-    .btn{
-      min-height:46px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px 14px;
-      background:#1f2330;
-      color:#fff;
-      cursor:pointer;
-      transition:transform .06s ease, opacity .15s ease;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    }
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{overflow:hidden}
+    .app{height:100dvh;display:flex;flex-direction:column;background:radial-gradient(circle at top center, rgba(66,123,255,.08), transparent 30%), var(--bg)}
+    .topbar{position:sticky;top:0;z-index:20;padding:18px 18px 12px;border-bottom:1px solid var(--line);backdrop-filter:blur(12px);background:rgba(11,12,17,.92)}
+    .title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    h1{margin:0;font-size:28px;line-height:1.05;letter-spacing:.2px}
+    .sub{margin-top:6px;color:var(--muted);font-size:15px;line-height:1.35}
+    .badge{align-self:flex-start;border:1px solid var(--line);background:rgba(255,255,255,.02);padding:11px 14px;border-radius:999px;color:var(--muted);font-weight:600;white-space:nowrap}
+
+    .content{flex:1;overflow:auto;padding:16px 16px 110px}
+    .view{display:none;gap:14px;flex-direction:column}
+    .view.active{display:flex}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 100%), var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:var(--shadow)}
+    .card h2,.card h3{margin:0 0 6px}
+    .card p{margin:0;color:var(--muted)}
+
+    .stack{display:flex;flex-direction:column;gap:12px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+    .btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--text);border-radius:18px;padding:13px 14px;font-weight:700;font-size:16px;line-height:1.15;cursor:pointer;box-shadow:none}
+    .btn.small{padding:11px 12px;font-size:15px;border-radius:16px}
+    .btn.green{background:var(--green);color:#07110a;border-color:#24a758}
+    .btn.blue{background:var(--blue);border-color:#2d63dc}
+    .btn.ghost{background:transparent}
+    .btn.warn{background:#302816;border-color:#5e4d1f;color:#f7dda0}
+    .btn.danger{background:#331b1b;border-color:#6b2a2a;color:#ffb2b2}
     .btn:active{transform:translateY(1px)}
-    .btn-green{background:#2cc26b;border-color:#21a356;color:#071108;font-weight:700}
-    .btn-blue{background:var(--accent);border-color:#2457d3}
-    .btn-ghost{background:var(--panel-2)}
-    .btn-danger{background:#32161a;border-color:#5b1f27;color:#ffd3d8}
-    .btn-small{min-height:38px;padding:9px 12px;border-radius:12px;font-size:14px}
     .btn[disabled]{opacity:.45;cursor:default}
-    .filters-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field.full{grid-column:1/-1}
-    .label{font-size:12px;color:var(--muted)}
-    .input,
-    .select,
-    .search{
-      width:100%;
-      min-height:44px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:var(--panel);
-      color:var(--text);
-      padding:10px 12px;
-      outline:none;
-    }
-    .search-row{display:grid;grid-template-columns:1fr auto;gap:10px}
-    .summary-strip{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:0 14px 14px;
-      color:var(--muted);font-size:13px;
-    }
-    .student-card{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(23,25,33,.98);
-      padding:12px;
-      margin-bottom:10px;
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .student-card.active{border-color:#3c63c6;box-shadow:0 0 0 1px rgba(61,123,255,.28) inset}
-    .student-top{
-      display:grid;
-      grid-template-columns:auto 52px minmax(0,1fr) auto;
-      gap:10px;
-      align-items:center;
-    }
-    .toggle{
-      width:42px;height:24px;border-radius:999px;border:1px solid var(--line);background:#2a2f3a;position:relative;cursor:pointer;flex:0 0 auto;
-    }
-    .toggle::after{
-      content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s ease;
-    }
-    .toggle.on{background:var(--accent)}
-    .toggle.on::after{transform:translateX(18px)}
-    .avatar{
-      width:52px;height:52px;border-radius:50%;overflow:hidden;background:#2a2f3a;display:grid;place-items:center;flex:0 0 auto;
-      border:1px solid #333847;
-    }
-    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-    .avatar span{font-weight:700}
-    .name-wrap{min-width:0}
-    .name{
-      margin:0;
-      font-size:17px;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
-    .subline{margin-top:4px;color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
-    .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-    .dot.ok{background:var(--ok)}
-    .dot.warn{background:var(--warn)}
-    .dot.bad{background:var(--bad)}
-    .open-btn{min-width:92px}
-    .student-fin{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:8px;
-    }
-    .mini-stat{
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#171923;
-      padding:9px 10px;
-      min-width:0;
-    }
-    .mini-stat .k{font-size:11px;color:var(--muted)}
-    .mini-stat .v{font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .chip{
-      display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);
-      border-radius:999px;background:#171923;font-size:12px;color:#dbe1f0;
-    }
-    .chip.ok{border-color:rgba(44,194,107,.3);background:rgba(44,194,107,.12)}
-    .chip.warn{border-color:rgba(241,196,15,.3);background:rgba(241,196,15,.12)}
-    .chip.bad{border-color:rgba(255,82,82,.3);background:rgba(255,82,82,.12)}
-    .detail-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-    }
-    .detail-card{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#171923;
-      padding:12px;
-    }
-    .detail-card h4{margin:0 0 10px;font-size:14px}
-    .pkg-row{display:flex;gap:8px;flex-wrap:wrap}
-    .pkg-btn{
-      flex:1 1 0;
-      min-width:76px;
-      min-height:42px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:#1d2130;
-      color:#dfe4f2;
-      cursor:pointer;
-    }
-    .pkg-btn.active{background:var(--accent);border-color:#2457d3;color:#fff;font-weight:700}
-    .money-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .money-block{display:flex;flex-direction:column;gap:6px}
-    .money-block .value-read{
-      min-height:44px;display:flex;align-items:center;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:#10131a;
-    }
-    .detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .detail-actions .full{grid-column:1/-1}
-    .matrix-head{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;
-    }
-    .matrix-note{font-size:12px;color:var(--muted)}
-    .matrix-scroll{
-      display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;
-    }
-    .day-card{
-      min-width:118px;max-width:118px;flex:0 0 118px;
-      border:1px solid var(--line);border-radius:16px;background:#171923;padding:10px;
-    }
-    .day-top{font-size:12px;color:#cfd3e1;text-align:center;margin-bottom:8px}
-    .slot-line{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:center;margin-bottom:8px}
-    .slot-line:last-child{margin-bottom:0}
-    .ud-label{font-size:12px;color:var(--muted);text-align:center}
-    .slot{
-      position:relative;min-height:44px;border:1px solid var(--line);border-radius:14px;background:#1b1f29;
-      display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;user-select:none;
-      padding:4px;text-align:center;
-    }
-    .slot.paid{background:var(--paid);color:#111}
-    .slot.special{background:#252a38}
-    .counter.penult{color:var(--warn)}
-    .counter.final{color:var(--bad)}
-    .slot small{font-size:11px;color:var(--muted)}
-    .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .hint{color:var(--muted);font-size:12px;padding:0 14px 14px}
-    .sticky-bottom{
-      position:sticky;bottom:0;z-index:20;margin:12px -12px 0;padding:12px 12px calc(var(--safe-bottom) + 12px);
-      backdrop-filter: blur(14px);background:rgba(11,11,15,.92);border-top:1px solid rgba(38,42,51,.9);
-    }
-    .bulk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .sheet-backdrop,
-    .modal-backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.54);display:none;z-index:90;
-    }
-    .sheet-backdrop.open,
-    .modal-backdrop.open{display:block}
-    .bottom-sheet{
-      position:fixed;left:0;right:0;bottom:0;z-index:100;
-      border-radius:24px 24px 0 0;background:#11141c;border-top:1px solid var(--line);
-      transform:translateY(110%);transition:transform .22s ease;padding:12px 12px calc(var(--safe-bottom) + 14px);
-      box-shadow:0 -18px 40px rgba(0,0,0,.4);
-    }
-    .bottom-sheet.open{transform:translateY(0)}
-    .sheet-handle{width:44px;height:5px;border-radius:999px;background:#3a3f4d;margin:4px auto 14px}
-    .sheet-title{font-size:17px;margin:0 0 4px}
-    .sheet-sub{color:var(--muted);font-size:12px;margin-bottom:14px}
-    .sheet-actions{display:grid;gap:10px}
-    .modal{
-      position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);
-      width:min(calc(100% - 24px),420px);background:#11141c;border:1px solid var(--line);border-radius:22px;
-      z-index:100;padding:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.18s ease;
-    }
-    .modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-    .modal h3{margin:0 0 12px}
-    .modal-grid{display:grid;gap:10px}
-    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-    .empty{padding:18px;color:var(--muted);text-align:center}
-    @media (min-width:680px){
-      .actions-grid{grid-template-columns:repeat(3,1fr)}
-      .filters-grid{grid-template-columns:repeat(3,1fr)}
-      .field.full{grid-column:1/-1}
-      .detail-grid{grid-template-columns:1.1fr .9fr}
-      .bulk-grid{grid-template-columns:repeat(3,1fr)}
+
+    .section-title{font-size:17px;font-weight:800;margin:0 0 4px}
+    .section-sub{font-size:14px;color:var(--muted);margin:0 0 12px}
+
+    label.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+    label.field span{color:var(--muted);font-size:14px}
+    select,input{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:15px 16px;font-size:16px;outline:none}
+    input::placeholder{color:#6f7890}
+    .search-row{display:grid;grid-template-columns:1fr 132px;gap:12px}
+
+    .student-list{display:flex;flex-direction:column;gap:12px}
+    .student-card{padding:14px;background:var(--panel-2);border:1px solid var(--line);border-radius:22px;display:flex;flex-direction:column;gap:12px;cursor:pointer}
+    .student-card.active-select{border-color:#3d6cff;box-shadow:0 0 0 2px rgba(61,108,255,.18) inset}
+    .student-head{display:grid;grid-template-columns:auto 56px 1fr auto;gap:12px;align-items:start}
+    .select-box{width:24px;height:24px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;background:#171b26;margin-top:6px;color:transparent;font-weight:900}
+    .select-box.selected{background:var(--blue);border-color:#2d63dc;color:#fff}
+    .avatar{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:18px;color:#f5f7fb;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08)}
+    .student-main{min-width:0;display:flex;flex-direction:column;gap:8px}
+    .fio{font-size:20px;line-height:1.1;font-weight:800;word-break:break-word}
+    .meta-row{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:#dfe4f2;font-weight:700;font-size:15px}
+    .chip.status-ok{background:rgba(52,197,110,.16);border-color:rgba(52,197,110,.34);color:#92f1b3}
+    .chip.status-frozen{background:rgba(66,123,255,.16);border-color:rgba(66,123,255,.34);color:#b8cfff}
+    .chip.status-debt{background:rgba(255,96,96,.16);border-color:rgba(255,96,96,.34);color:#ffc1c1}
+    .power{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:14px;border:1px solid var(--line);background:#171b26;color:#9aa3b9;cursor:pointer}
+    .power.on{color:#93efb4;background:rgba(52,197,110,.12);border-color:rgba(52,197,110,.28)}
+    .power.off{color:#ff9d9d;background:rgba(255,96,96,.1);border-color:rgba(255,96,96,.28)}
+
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpi{background:#121621;border:1px solid var(--line);border-radius:18px;padding:12px 12px 10px;min-width:0}
+    .kpi .label{color:var(--muted);font-size:14px;margin-bottom:6px}
+    .kpi .value{font-size:18px;font-weight:800;line-height:1.1}
+    .card-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .student-hero{display:flex;flex-direction:column;gap:14px}
+    .hero-top{display:grid;grid-template-columns:68px 1fr;gap:14px;align-items:start}
+    .hero-avatar{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:900;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08)}
+    .hero-title{display:flex;flex-direction:column;gap:8px;min-width:0}
+    .hero-title h2{font-size:26px;line-height:1.05;margin:0;word-break:break-word}
+
+    .progress-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .lock{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-weight:800;cursor:pointer;white-space:nowrap}
+    .lock.unlocked{background:rgba(66,123,255,.18);border-color:rgba(66,123,255,.38);color:#cfe0ff}
+
+    .month-strip{overflow:auto;margin:0 -4px;padding:4px 4px 2px}
+    .days{display:flex;gap:12px;min-width:max-content}
+    .day-card{width:128px;background:#121621;border:1px solid var(--line);border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:12px}
+    .day-head{text-align:center}
+    .day-date{font-size:18px;font-weight:800;line-height:1.1}
+    .day-dow{color:var(--muted);font-size:14px;margin-top:4px}
+    .slot-stack{display:flex;flex-direction:column;gap:10px}
+    .slot-block{display:grid;grid-template-columns:18px 1fr;gap:10px;align-items:center}
+    .slot-label{color:#b0b8cd;font-size:15px;text-align:center}
+    .slot{position:relative;background:#171b26;border:1px solid var(--line);border-radius:18px;min-height:70px;padding:10px 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;text-align:center;cursor:pointer;user-select:none}
+    .slot.empty{color:#7f8798}
+    .slot.normal-1{background:rgba(66,123,255,.12);border-color:rgba(66,123,255,.26)}
+    .slot.normal-2{background:rgba(52,197,110,.12);border-color:rgba(52,197,110,.26)}
+    .slot.trial{background:rgba(240,210,113,.14);border-color:rgba(240,210,113,.32);color:#ffe9a6}
+    .slot.single{background:rgba(243,156,18,.14);border-color:rgba(243,156,18,.32);color:#ffd6a0}
+    .slot.bonus{background:rgba(172,126,255,.14);border-color:rgba(172,126,255,.32);color:#dec8ff}
+    .slot .main{font-size:16px;font-weight:800;line-height:1}
+    .slot .sub{font-size:13px;color:inherit;opacity:.86;margin:0}
+    .pay-mark{position:absolute;right:8px;top:8px;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:rgba(240,210,113,.18);border:1px solid rgba(240,210,113,.38);display:flex;align-items:center;justify-content:center;color:#ffe7a8;font-size:12px;font-weight:800}
+
+    .legend{display:flex;flex-wrap:wrap;gap:10px}
+    .legend .chip{font-weight:600}
+    .hint{color:var(--muted);font-size:14px;line-height:1.4}
+
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(12px + var(--safe-bottom));background:linear-gradient(180deg, rgba(11,12,17,0), rgba(11,12,17,.96) 28%, rgba(11,12,17,.98));backdrop-filter:blur(12px)}
+    .bottom-nav .row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:0;border:0}
+    .nav-btn{padding:16px 10px;border-radius:20px;border:1px solid var(--line);background:rgba(20,23,32,.96);color:var(--text);font-size:16px;font-weight:800;cursor:pointer}
+    .nav-btn.active{border-color:#396bfa;background:#1b2540;color:#dfe7ff}
+
+    .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(4px);display:none;z-index:50}
+    .sheet-backdrop.show{display:block}
+    .sheet{position:absolute;left:0;right:0;bottom:0;background:#11151f;border-top-left-radius:26px;border-top-right-radius:26px;border:1px solid var(--line);padding:16px 16px calc(16px + var(--safe-bottom));box-shadow:0 -18px 36px rgba(0,0,0,.44)}
+    .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .sheet-title{font-size:20px;font-weight:900}
+    .sheet-sub{color:var(--muted);font-size:14px}
+    .close{background:transparent;border:0;color:#aeb6ca;font-size:28px;line-height:1;cursor:pointer}
+    .sheet-group{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .sheet-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:60;background:#12161f;border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+    @media (min-width:720px){
+      .content{max-width:760px;margin:0 auto;padding-left:20px;padding-right:20px}
+      .bottom-nav{display:flex;justify-content:center}
+      .bottom-nav .row{max-width:760px;width:100%}
     }
   </style>
 </head>
 <body>
-  <div class="app" id="appRoot">
-    <div class="topbar">
+  <div class="app">
+    <header class="topbar">
       <div class="title-row">
-        <div class="title-wrap">
-          <h1>КУТО</h1>
-          <p id="contextLine">Кикбоксинг • Групповая • Группа A • Сентябрь 2025</p>
+        <div>
+          <h1>KUTO</h1>
+          <div class="sub" id="headerSub">Кикбоксинг • Групповая • Группа A • Сентябрь 2025</div>
         </div>
         <div class="badge" id="selectedBadge">Выбрано: 0</div>
       </div>
-    </div>
+    </header>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>Действия</h2>
-          <div class="section-sub">Массовые операции и быстрый ввод</div>
+    <main class="content">
+      <section class="view active" id="view-list"></section>
+      <section class="view" id="view-student"></section>
+      <section class="view" id="view-progress"></section>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="row">
+        <button class="nav-btn active" data-view="list">Состав</button>
+        <button class="nav-btn" data-view="student">Ученик</button>
+        <button class="nav-btn" data-view="progress">Прогресс</button>
+      </div>
+    </nav>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop">
+    <div class="sheet" id="sheet"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+  const PRICE_BY_PACKAGE = {4: 2000, 8: 3000, 12: 4000};
+
+  const app = {
+    view: 'list',
+    query: '',
+    month: 8,
+    year: 2025,
+    discipline: 'Кикбоксинг',
+    trainingType: 'Групповая',
+    group: 'Группа A',
+    selectedStudentId: 2,
+    selectedForTransfer: new Set([2]),
+    progressUnlocked: false,
+    store: new Map(),
+  };
+
+  const listView = document.getElementById('view-list');
+  const studentView = document.getElementById('view-student');
+  const progressView = document.getElementById('view-progress');
+  const headerSub = document.getElementById('headerSub');
+  const selectedBadge = document.getElementById('selectedBadge');
+  const sheetBackdrop = document.getElementById('sheetBackdrop');
+  const sheet = document.getElementById('sheet');
+  const toast = document.getElementById('toast');
+
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function monthKey(){ return `${app.year}-${String(app.month+1).padStart(2,'0')}`; }
+  function fullContext(){ return `${app.discipline} • ${app.trainingType} • ${app.group} • ${MONTHS[app.month]} ${app.year}`; }
+  function initials(name){
+    return name.split(' ').filter(Boolean).slice(0,2).map(s => s[0]?.toUpperCase() || '').join('');
+  }
+  function priceFor(pkg){ return PRICE_BY_PACKAGE[pkg] || 0; }
+  function selectedMonthState(){
+    const key = monthKey();
+    if(!app.store.has(key)) app.store.set(key, createSeedState());
+    return app.store.get(key);
+  }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function createStudent(data){
+    const pkg = data.packageTotal || 8;
+    const paid = data.paid ?? 0;
+    const debt = Math.max(0, priceFor(pkg) - paid);
+    return {
+      id: data.id || uid(),
+      fullName: data.fullName,
+      packageTotal: pkg,
+      packageLabel: `Блок ${pkg}`,
+      paid,
+      debt,
+      active: data.active !== false,
+      frozen: !!data.frozen,
+      selected: false,
+      extendDays: data.extendDays || 0,
+      progressSlots: data.progressSlots || {},
+    };
+  }
+
+  function createSeedState(){
+    return {
+      students: [
+        createStudent({id:'u1', fullName:'Иванов Иван', packageTotal:12, paid:4000}),
+        createStudent({id:'u2', fullName:'Петров Пётр', packageTotal:8, paid:2000}),
+        createStudent({id:'u3', fullName:'Фролова Анна', packageTotal:4, paid:0}),
+        createStudent({id:'u4', fullName:'Ксенофонтов Андрей', packageTotal:12, paid:0}),
+      ]
+    };
+  }
+
+  function ensureMonthState(){ selectedMonthState(); }
+  ensureMonthState();
+
+  function getStudents(){ return selectedMonthState().students; }
+  function getActiveStudents(){ return getStudents().filter(s => s.active); }
+  function getStudentById(id){ return getStudents().find(s => s.id === id) || null; }
+  function getSelectedStudent(){
+    let s = getStudentById(app.selectedStudentId);
+    if(s && s.active) return s;
+    const first = getActiveStudents()[0] || getStudents()[0] || null;
+    app.selectedStudentId = first?.id || null;
+    return first;
+  }
+
+  function computeUsed(student){
+    return Object.values(student.progressSlots || {}).filter(slot => {
+      if(!slot) return false;
+      return ['normal-1','normal-2','trial','single','bonus'].includes(slot.kind);
+    }).length;
+  }
+  function refreshStudentDerived(student){
+    student.debt = Math.max(0, priceFor(student.packageTotal) - (student.paid || 0));
+    student.packageLabel = `Блок ${student.packageTotal}`;
+  }
+  function studentStatus(student){
+    refreshStudentDerived(student);
+    if(student.frozen) return {text:'Заморожен', cls:'status-frozen'};
+    if(student.debt > 0) return {text:'Долг', cls:'status-debt'};
+    return {text:'Активен', cls:'status-ok'};
+  }
+  function progressText(student){ return `${computeUsed(student)}/${student.packageTotal}`; }
+
+  function datesMWF(y,m,count=10){
+    const d = new Date(y,m,1);
+    while(d.getDay() !== 1){ d.setDate(d.getDate()+1); }
+    const out = [];
+    while(out.length < count){
+      const wd = d.getDay();
+      if([1,3,5].includes(wd)) out.push(new Date(d));
+      d.setDate(d.getDate()+1);
+    }
+    return out;
+  }
+
+  function defaultSlot(){ return {kind:'empty', state:0, payment:0}; }
+  function slotKey(index, part){ return `${index}:${part}`; }
+  function getSlot(student, index, part){
+    const key = slotKey(index, part);
+    return student.progressSlots[key] ? clone(student.progressSlots[key]) : defaultSlot();
+  }
+  function setSlot(student, index, part, slot){
+    const key = slotKey(index, part);
+    if(!student.progressSlots) student.progressSlots = {};
+    if(!slot || slot.kind === 'empty') delete student.progressSlots[key];
+    else student.progressSlots[key] = slot;
+  }
+
+  function cycleNormal(student, index, part){
+    const slot = getSlot(student, index, part);
+    if(slot.kind !== 'normal-1' && slot.kind !== 'normal-2'){
+      setSlot(student, index, part, {kind:'normal-1', state:1, payment:slot.payment || 0});
+      return;
+    }
+    if(slot.kind === 'normal-1'){
+      slot.kind = 'normal-2';
+      slot.state = 2;
+      setSlot(student, index, part, slot);
+      return;
+    }
+    setSlot(student, index, part, null);
+  }
+
+  function slotView(slot){
+    if(!slot || slot.kind === 'empty') return {cls:'empty', main:'пусто', sub:''};
+    if(slot.kind === 'normal-1') return {cls:'normal-1', main:'1/2', sub:'обычная'};
+    if(slot.kind === 'normal-2') return {cls:'normal-2', main:'2/2', sub:'обычная'};
+    if(slot.kind === 'trial') return {cls:'trial', main:'П', sub:'пробная'};
+    if(slot.kind === 'single') return {cls:'single', main:'Р', sub:'разовая'};
+    if(slot.kind === 'bonus') return {cls:'bonus', main:'БОН', sub:'бонус'};
+    return {cls:'empty', main:'пусто', sub:''};
+  }
+
+  function render(){
+    headerSub.textContent = fullContext();
+    selectedBadge.textContent = `Выбрано: ${app.selectedForTransfer.size}`;
+    renderList();
+    renderStudent();
+    renderProgress();
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === app.view));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${app.view}`).classList.add('active');
+  }
+
+  function renderList(){
+    const students = getActiveStudents().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
+    if(!students.some(s => s.id === app.selectedStudentId) && students[0]) app.selectedStudentId = students[0].id;
+
+    listView.innerHTML = `
+      <div class="card">
+        <div class="section-title">Действия</div>
+        <div class="section-sub">Массовые операции и быстрый ввод</div>
+        <div class="grid-2">
+          <button class="btn green small" id="btnAddStudent">+ Ученик</button>
+          <button class="btn blue small" id="btnTransferSelected" ${app.selectedForTransfer.size ? '' : 'disabled'}>Перенести выбранных</button>
         </div>
       </div>
-      <div class="actions-grid">
-        <button class="btn btn-green" id="btnAdd">＋ Ученик</button>
-        <button class="btn btn-blue" id="btnTransferSel">Перенести выбранных</button>
-        <button class="btn btn-blue full" id="btnTransferGroup">Перенести группу</button>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>Контекст</h2>
-          <div class="section-sub">Фильтры, месяц и состав</div>
+      <div class="card">
+        <div class="section-title">Контекст</div>
+        <div class="section-sub">Фильтры, месяц и состав</div>
+        <div class="grid-2">
+          <label class="field"><span>Дисциплина</span><select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select></label>
+          <label class="field"><span>Тип</span><select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select></label>
+          <label class="field"><span>Группа</span><select id="f-group"><option ${app.group==='Группа A'?'selected':''}>Группа A</option><option ${app.group==='Группа B'?'selected':''}>Группа B</option></select></label>
+          <label class="field"><span>Месяц</span><select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select></label>
+          <label class="field"><span>Год</span><select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select></label>
+        </div>
+        <div style="height:12px"></div>
+        <div class="search-row">
+          <input id="f-search" placeholder="Фамилия Имя" value="${escapeHtml(app.query)}" />
+          <button class="btn small" id="btnApplyFilters">Показать</button>
         </div>
       </div>
-      <div class="controls">
-        <div class="filters-grid">
-          <label class="field">
-            <span class="label">Дисциплина</span>
-            <select class="select" id="disciplineSel">
-              <option>Кикбоксинг</option>
-              <option>Кроссфит</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="label">Тип</span>
-            <select class="select" id="typeSel">
-              <option>Групповая</option>
-              <option>Индивидуальная</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="label">Группа</span>
-            <select class="select" id="groupSel">
-              <option>Группа A</option>
-              <option>Группа B</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="label">Месяц</span>
-            <select class="select" id="monthSel"></select>
-          </label>
-          <label class="field">
-            <span class="label">Год</span>
-            <select class="select" id="yearSel"></select>
-          </label>
-          <label class="field full">
-            <span class="label">Поиск</span>
-            <div class="search-row">
-              <input class="search" id="searchInput" placeholder="Фамилия Имя" />
-              <button class="btn btn-small" id="btnApply">Показать</button>
+      <div class="card">
+        <div class="section-title">Список учеников</div>
+        <div class="section-sub">Показываются только активные ученики выбранного месяца</div>
+        <div class="student-list" id="studentList"></div>
+      </div>
+    `;
+
+    const list = listView.querySelector('#studentList');
+    if(!students.length){
+      list.innerHTML = `<div class="hint">В этом месяце активных учеников нет.</div>`;
+    } else {
+      list.innerHTML = students.map(s => studentCardHtml(s)).join('');
+    }
+
+    bindListHandlers();
+  }
+
+  function studentCardHtml(student){
+    const status = studentStatus(student);
+    const isSelected = app.selectedStudentId === student.id;
+    const isMarked = app.selectedForTransfer.has(student.id);
+    return `
+      <article class="student-card ${isSelected ? 'active-select' : ''}" data-student-card="${student.id}">
+        <div class="student-head">
+          <button class="select-box ${isMarked ? 'selected' : ''}" data-select-transfer="${student.id}">✓</button>
+          <div class="avatar">${initials(student.fullName)}</div>
+          <div class="student-main">
+            <div class="fio">${escapeHtml(student.fullName)}</div>
+            <div class="meta-row">
+              <div class="chip">${escapeHtml(student.packageLabel)}</div>
+              <div class="chip ${status.cls}">${status.text}</div>
             </div>
-          </label>
+          </div>
+          <button class="power ${student.active ? 'on' : 'off'}" data-toggle-active="${student.id}" title="${student.active ? 'Исключить из месяца' : 'Вернуть в месяц'}">${student.active ? '⏻' : '⭘'}</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="label">Оплачено</div><div class="value">${student.paid}</div></div>
+          <div class="kpi"><div class="label">Долг</div><div class="value">${student.debt}</div></div>
+          <div class="kpi"><div class="label">Прогресс</div><div class="value">${progressText(student)}</div></div>
+        </div>
+        <div class="card-actions">
+          <button class="btn small" data-open-student="${student.id}">Ученик</button>
+          <button class="btn small" data-open-progress="${student.id}">Прогресс</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderStudent(){
+    const student = getSelectedStudent();
+    if(!student){
+      studentView.innerHTML = `<div class="card"><div class="section-title">Ученик</div><div class="hint">Выберите ученика на экране состава.</div></div>`;
+      return;
+    }
+    const status = studentStatus(student);
+    studentView.innerHTML = `
+      <div class="card student-hero">
+        <div class="hero-top">
+          <div class="hero-avatar">${initials(student.fullName)}</div>
+          <div class="hero-title">
+            <h2>${escapeHtml(student.fullName)}</h2>
+            <div class="meta-row">
+              <div class="chip">${escapeHtml(student.packageLabel)}</div>
+              <div class="chip ${status.cls}">${status.text}</div>
+              <div class="chip">Продление: +${student.extendDays || 0} дн</div>
+            </div>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="label">Оплачено</div><div class="value">${student.paid}</div></div>
+          <div class="kpi"><div class="label">Долг</div><div class="value">${student.debt}</div></div>
+          <div class="kpi"><div class="label">Прогресс</div><div class="value">${progressText(student)}</div></div>
         </div>
       </div>
-      <div class="summary-strip">
-        <span id="summaryCount">Ученики: 0</span>
-        <span id="summaryMonth">Сентябрь 2025</span>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>Список учеников</h2>
-          <div class="section-sub">Выберите одного для детальной работы</div>
+      <div class="card">
+        <div class="section-title">Действия</div>
+        <div class="section-sub">Заморозка, продление, оплата и состав месяца</div>
+        <div class="grid-2">
+          <button class="btn small ${student.frozen ? 'blue' : 'warn'}" id="btnFreeze">${student.frozen ? 'Разморозить' : 'Заморозить'}</button>
+          <button class="btn small blue" id="btnExtend">Продлить +7 дней</button>
+          <button class="btn small" id="btnPay">Внести оплату</button>
+          <button class="btn small danger" id="btnRemoveMonth">Исключить из месяца</button>
         </div>
       </div>
-      <div class="list" id="studentList"></div>
-    </section>
+      <div class="card">
+        <div class="section-title">Комментарий по канону окна</div>
+        <div class="hint">На карточке показывается только текущий активный пакет. История пакетов сюда не выводится. Массовые действия на этом экране не дублируются.</div>
+      </div>
+    `;
 
-    <section class="section" id="activeSection">
-      <div class="section-head">
-        <div>
-          <h2>Активный ученик</h2>
-          <div class="section-sub">Пакет, оплата, долг, статус и действия</div>
+    studentView.querySelector('#btnFreeze').onclick = () => {
+      student.frozen = !student.frozen;
+      render();
+      showToast(student.frozen ? 'Пакет заморожен' : 'Заморозка снята');
+    };
+    studentView.querySelector('#btnExtend').onclick = () => {
+      student.extendDays = (student.extendDays || 0) + 7;
+      render();
+      showToast('Продление: +7 дней');
+    };
+    studentView.querySelector('#btnPay').onclick = () => openPaymentSheet(student);
+    studentView.querySelector('#btnRemoveMonth').onclick = () => {
+      student.active = false;
+      app.selectedForTransfer.delete(student.id);
+      if(app.selectedStudentId === student.id) app.selectedStudentId = getActiveStudents()[0]?.id || null;
+      render();
+      app.view = 'list';
+      render();
+      showToast('Ученик исключён из текущего месяца');
+    };
+  }
+
+  function renderProgress(){
+    const student = getSelectedStudent();
+    if(!student){
+      progressView.innerHTML = `<div class="card"><div class="section-title">Прогресс</div><div class="hint">Выберите ученика на экране состава.</div></div>`;
+      return;
+    }
+    const days = datesMWF(app.year, app.month, 10);
+    progressView.innerHTML = `
+      <div class="card">
+        <div class="progress-top">
+          <div>
+            <div class="section-title">Прогресс месяца</div>
+            <div class="section-sub">Одна матрица — только для выбранного ученика</div>
+          </div>
+          <button class="lock ${app.progressUnlocked ? 'unlocked' : ''}" id="lockBtn">${app.progressUnlocked ? '🔓 Изменения открыты' : '🔒 Изменения закрыты'}</button>
+        </div>
+        <div class="hero-title" style="margin-bottom:12px">
+          <h2 style="font-size:22px">${escapeHtml(student.fullName)}</h2>
+          <div class="meta-row">
+            <div class="chip">${escapeHtml(student.packageLabel)}</div>
+            <div class="chip">Оплачено ${student.paid}</div>
+            <div class="chip">Долг ${student.debt}</div>
+          </div>
+        </div>
+        <div class="month-strip">
+          <div class="days" id="daysGrid">
+            ${days.map((d,i) => dayCardHtml(student,d,i)).join('')}
+          </div>
         </div>
       </div>
-      <div class="detail" id="activeDetail"></div>
-    </section>
-
-    <section class="section" id="matrixSection">
-      <div class="section-head">
-        <div>
-          <h2>Прогресс месяца</h2>
-          <div class="section-sub">Одна матрица — только для выбранного ученика</div>
+      <div class="card">
+        <div class="section-title">Легенда и правила</div>
+        <div class="legend">
+          <div class="chip">1/2 и 2/2 — стадии обычной тренировки</div>
+          <div class="chip">П — пробная</div>
+          <div class="chip">Р — разовая</div>
+          <div class="chip">БОН — бонусная</div>
+          <div class="chip">₽ — к слоту привязана оплата</div>
         </div>
+        <div style="height:12px"></div>
+        <div class="hint">Быстрый тап по слоту работает только при открытом замке. Долгий тап открывает меню типа тренировки и оплаты. Это защита от случайного изменения прогресса.</div>
       </div>
-      <div class="matrix-wrap" id="matrixWrap"></div>
-      <div class="hint">Тап по ячейке: цикл 0 → 1 → 2 → 0. Долгий тап: Пробная / Разовая / Бонусная / Очистить.</div>
-    </section>
+    `;
 
-    <div class="sticky-bottom">
-      <div class="bulk-grid">
-        <button class="btn btn-ghost" id="btnFocusList">К списку</button>
-        <button class="btn btn-ghost" id="btnFocusDetail">К карточке</button>
-        <button class="btn btn-ghost" id="btnFocusMatrix">К прогрессу</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="sheet-backdrop" id="sheetBackdrop"></div>
-  <div class="bottom-sheet" id="slotSheet">
-    <div class="sheet-handle"></div>
-    <h3 class="sheet-title">Тип слота</h3>
-    <div class="sheet-sub" id="slotSheetSub">Дата и ячейка</div>
-    <div class="sheet-actions">
-      <button class="btn btn-ghost" data-slot-action="trial">П — пробная (0)</button>
-      <button class="btn btn-ghost" data-slot-action="single">Р — разовая (+600)</button>
-      <button class="btn btn-ghost" data-slot-action="bonus">БОН — бонусная</button>
-      <button class="btn btn-danger" data-slot-action="clear">Очистить слот</button>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="modalBackdrop"></div>
-  <div class="modal" id="addModal">
-    <h3>Добавить ученика</h3>
-    <div class="modal-grid">
-      <label class="field">
-        <span class="label">ФИО</span>
-        <input class="input" id="addFio" placeholder="Новый Ученик" />
-      </label>
-      <label class="field">
-        <span class="label">Пакет</span>
-        <select class="select" id="addPkg">
-          <option value="4">Блок 4</option>
-          <option value="8">Блок 8</option>
-          <option value="12" selected>Блок 12</option>
-        </select>
-      </label>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="btnAddCancel">Отмена</button>
-      <button class="btn btn-green" id="btnAddConfirm">Создать</button>
-    </div>
-  </div>
-
-  <script>
-    const PRICE = {4:2000, 8:3000, 12:4000};
-    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
-    const STORAGE_KEY = 'uaft_kuto_mobile_v1';
-
-    const els = {
-      disciplineSel: document.getElementById('disciplineSel'),
-      typeSel: document.getElementById('typeSel'),
-      groupSel: document.getElementById('groupSel'),
-      monthSel: document.getElementById('monthSel'),
-      yearSel: document.getElementById('yearSel'),
-      searchInput: document.getElementById('searchInput'),
-      btnApply: document.getElementById('btnApply'),
-      btnAdd: document.getElementById('btnAdd'),
-      btnTransferSel: document.getElementById('btnTransferSel'),
-      btnTransferGroup: document.getElementById('btnTransferGroup'),
-      contextLine: document.getElementById('contextLine'),
-      selectedBadge: document.getElementById('selectedBadge'),
-      summaryCount: document.getElementById('summaryCount'),
-      summaryMonth: document.getElementById('summaryMonth'),
-      studentList: document.getElementById('studentList'),
-      activeDetail: document.getElementById('activeDetail'),
-      matrixWrap: document.getElementById('matrixWrap'),
-      activeSection: document.getElementById('activeSection'),
-      matrixSection: document.getElementById('matrixSection'),
-      btnFocusList: document.getElementById('btnFocusList'),
-      btnFocusDetail: document.getElementById('btnFocusDetail'),
-      btnFocusMatrix: document.getElementById('btnFocusMatrix'),
-      sheetBackdrop: document.getElementById('sheetBackdrop'),
-      slotSheet: document.getElementById('slotSheet'),
-      slotSheetSub: document.getElementById('slotSheetSub'),
-      modalBackdrop: document.getElementById('modalBackdrop'),
-      addModal: document.getElementById('addModal'),
-      addFio: document.getElementById('addFio'),
-      addPkg: document.getElementById('addPkg'),
-      btnAddCancel: document.getElementById('btnAddCancel'),
-      btnAddConfirm: document.getElementById('btnAddConfirm'),
+    progressView.querySelector('#lockBtn').onclick = () => {
+      app.progressUnlocked = !app.progressUnlocked;
+      render();
+      showToast(app.progressUnlocked ? 'Редактирование прогресса открыто' : 'Редактирование прогресса закрыто');
     };
 
-    function pad2(n){ return n < 10 ? '0' + n : '' + n; }
-    function dm(d){ return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1); }
-    function wd(d){ return WEEK[d.getDay()]; }
-    function ymKey(y,m){ return `${y}-${String(m+1).padStart(2,'0')}`; }
-    function nextMonth(y,m){ return m === 11 ? [y+1,0] : [y,m+1]; }
-    function priceFor(pkg){ return PRICE[pkg] || 0; }
-    function statusByPay(pay, price){ if(pay <= 0) return 'bad'; if(pay < price) return 'warn'; return 'ok'; }
-    function firstMondayOnOrAfter(y,m){ const d = new Date(y,m,1); const dow = d.getDay(); const add = (dow <= 1 ? (1-dow) : (8-dow)); d.setDate(d.getDate() + add); return d; }
-    function datesMWF(y,m){ const arr = []; let d = firstMondayOnOrAfter(y,m); for(let k=0;k<12;k++){ arr.push(new Date(d)); const step = (k%3===2) ? 3 : 2; d.setDate(d.getDate() + step); } return arr; }
-    function initials(fio){ return fio.split(' ').map(w => w[0] || '').slice(0,2).join('').toUpperCase() || 'НУ'; }
+    bindProgressHandlers(student);
+  }
 
-    let idSeq = 5;
-    let rosters = new Map();
-    let selectedByRoster = new Map();
-    let activeByRoster = new Map();
-    let slotCtx = null;
-    let touchHold = null;
+  function dayCardHtml(student, date, index){
+    const morning = getSlot(student,index,'u');
+    const evening = getSlot(student,index,'d');
+    return `
+      <article class="day-card">
+        <div class="day-head">
+          <div class="day-date">${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}</div>
+          <div class="day-dow">${WEEK[date.getDay()]}</div>
+        </div>
+        <div class="slot-stack">
+          ${slotBlockHtml(morning, 'У', index, 'u')}
+          ${slotBlockHtml(evening, 'Д', index, 'd')}
+        </div>
+      </article>
+    `;
+  }
 
-    function serializeVisits(v){
-      return {
-        m: Array.from(v.m.entries()),
-        d: Array.from(v.d.entries()),
-        t: Array.from(v.t.entries()),
-      };
-    }
-    function deserializeVisits(raw){
-      return {
-        m: new Map(raw?.m || []),
-        d: new Map(raw?.d || []),
-        t: new Map(raw?.t || []),
-      };
-    }
-    function saveState(){
-      const data = {
-        idSeq,
-        rosters: Array.from(rosters.entries()).map(([key, roster]) => [key, {
-          students: roster.students,
-          visits: Array.from(roster.visits.entries()).map(([sid,v]) => [sid, serializeVisits(v)])
-        }]),
-        selectedByRoster: Array.from(selectedByRoster.entries()).map(([key, set]) => [key, Array.from(set)]),
-        activeByRoster: Array.from(activeByRoster.entries()),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-    function loadState(){
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return false;
-      try{
-        const data = JSON.parse(raw);
-        idSeq = data.idSeq || 5;
-        rosters = new Map((data.rosters || []).map(([key, roster]) => [key, {
-          students: roster.students || [],
-          visits: new Map((roster.visits || []).map(([sid,v]) => [Number(sid), deserializeVisits(v)]))
-        }]));
-        selectedByRoster = new Map((data.selectedByRoster || []).map(([key, ids]) => [key, new Set(ids)]));
-        activeByRoster = new Map((data.activeByRoster || []).map(([key, sid]) => [key, Number(sid)]));
-        return true;
-      }catch(err){
-        console.warn('State load failed', err);
-        return false;
-      }
-    }
-    function initDefaultRoster(){
-      const key = ymKey(2025,8);
-      const students = [
-        {id:1,fio:'Иванов Иван',status:'ok',   pkg:12,pay:4000,debt:0,    avatar:'https://i.pravatar.cc/64?img=15', bonusCount:0, rCount:0, frozen:false},
-        {id:2,fio:'Петров Пётр',status:'warn', pkg:8, pay:2000,debt:1000, avatar:'https://i.pravatar.cc/64?img=32', bonusCount:0, rCount:0, frozen:false},
-        {id:3,fio:'Фролова Анна',status:'bad', pkg:4, pay:0,   debt:2000, avatar:'https://i.pravatar.cc/64?img=5',  bonusCount:0, rCount:0, frozen:false},
-        {id:4,fio:'Ксенофонтов Андрей',status:'bad',pkg:12,pay:0,debt:4000, avatar:'https://i.pravatar.cc/64?img=66', bonusCount:0, rCount:0, frozen:false},
-      ];
-      const visits = new Map();
-      students.forEach(s => visits.set(s.id,{m:new Map(),d:new Map(),t:new Map()}));
-      rosters.set(key,{students,visits});
-      selectedByRoster.set(key, new Set(students.map(s => s.id)));
-      activeByRoster.set(key, 1);
-    }
-    if(!loadState()) initDefaultRoster();
+  function slotBlockHtml(slot, label, index, part){
+    const v = slotView(slot);
+    return `
+      <div class="slot-block">
+        <div class="slot-label">${label}</div>
+        <button class="slot ${v.cls}" data-slot="${index}" data-part="${part}">
+          ${slot.payment ? `<div class="pay-mark">₽</div>` : ''}
+          <div class="main">${v.main}</div>
+          ${v.sub ? `<div class="sub">${v.sub}</div>` : ''}
+        </button>
+      </div>
+    `;
+  }
 
-    function currentKey(){ return ymKey(Number(els.yearSel.value), Number(els.monthSel.value)); }
-    function getRoster(y,m){
-      const key = ymKey(y,m);
-      if(!rosters.has(key)) rosters.set(key,{students:[],visits:new Map()});
-      if(!selectedByRoster.has(key)) selectedByRoster.set(key,new Set());
-      return rosters.get(key);
-    }
-    function getSelectionSet(key){
-      if(!selectedByRoster.has(key)) selectedByRoster.set(key,new Set());
-      return selectedByRoster.get(key);
-    }
-    function getActiveStudentId(key, list){
-      let sid = activeByRoster.get(key);
-      if(sid && list.some(s => s.id === sid)) return sid;
-      sid = list[0]?.id || null;
-      if(sid != null) activeByRoster.set(key, sid);
-      return sid;
-    }
-    function getState(v, kind, i){ return (kind === 'm' ? v.m : v.d).get(i) || 0; }
-    function setState(v, kind, i, value){ (kind === 'm' ? v.m : v.d).set(i, value); }
-    function getFilteredStudents(roster){
-      const q = (els.searchInput.value || '').trim().toLowerCase();
-      if(!q) return roster.students;
-      return roster.students.filter(s => s.fio.toLowerCase().includes(q));
-    }
-    function contextText(){
-      return `${els.disciplineSel.value} • ${els.typeSel.value} • ${els.groupSel.value} • ${MONTHS[Number(els.monthSel.value)]} ${els.yearSel.value}`;
-    }
-    function monthText(){
-      return `${MONTHS[Number(els.monthSel.value)]} ${els.yearSel.value}`;
-    }
+  function bindListHandlers(){
+    listView.querySelector('#btnAddStudent').onclick = openAddStudentSheet;
+    listView.querySelector('#btnTransferSelected').onclick = transferSelectedToNextMonth;
+    listView.querySelector('#btnApplyFilters').onclick = applyFilters;
+    listView.querySelector('#f-search').addEventListener('keydown', (e) => { if(e.key === 'Enter') applyFilters(); });
 
-    function syncStudentComputed(s){
-      s.pay = Math.max(0, Number(s.pay) || 0);
-      const price = priceFor(s.pkg);
-      s.debt = Math.max(0, price - s.pay);
-      s.status = statusByPay(s.pay, price);
-    }
-
-    function avatarNode(student){
-      const wrap = document.createElement('div');
-      wrap.className = 'avatar';
-      if(student.avatar){
-        const img = document.createElement('img');
-        img.src = student.avatar;
-        img.alt = student.fio;
-        img.onerror = () => {
-          wrap.innerHTML = '';
-          const span = document.createElement('span');
-          span.textContent = initials(student.fio);
-          wrap.appendChild(span);
-        };
-        wrap.appendChild(img);
-      }else{
-        const span = document.createElement('span');
-        span.textContent = initials(student.fio);
-        wrap.appendChild(span);
-      }
-      return wrap;
-    }
-
-    function statusChip(status){
-      const span = document.createElement('span');
-      span.className = `chip ${status}`;
-      const dot = document.createElement('span');
-      dot.className = `dot ${status}`;
-      span.appendChild(dot);
-      span.appendChild(document.createTextNode(status === 'ok' ? 'Активен' : status === 'warn' ? 'Частично' : 'Не оплачен'));
-      return span;
-    }
-
-    function renderStudentList(roster, list, key){
-      const selection = getSelectionSet(key);
-      const activeId = getActiveStudentId(key, list);
-      els.studentList.innerHTML = '';
-      if(list.length === 0){
-        els.studentList.innerHTML = '<div class="empty">По текущим фильтрам учеников нет.</div>';
-        return;
-      }
-      list.forEach(student => {
-        syncStudentComputed(student);
-        const card = document.createElement('article');
-        card.className = 'student-card' + (student.id === activeId ? ' active' : '');
-
-        const top = document.createElement('div');
-        top.className = 'student-top';
-
-        const toggle = document.createElement('button');
-        toggle.type = 'button';
-        toggle.className = 'toggle ' + (selection.has(student.id) ? 'on' : '');
-        toggle.addEventListener('click', () => {
-          if(selection.has(student.id)) selection.delete(student.id); else selection.add(student.id);
-          saveState();
-          render();
-        });
-
-        const av = avatarNode(student);
-        const nameWrap = document.createElement('div');
-        nameWrap.className = 'name-wrap';
-        const name = document.createElement('h3');
-        name.className = 'name';
-        name.textContent = student.fio;
-        const sub = document.createElement('div');
-        sub.className = 'subline';
-        sub.appendChild(statusChip(student.status));
-        const pkgChip = document.createElement('span');
-        pkgChip.className = 'chip';
-        pkgChip.textContent = `Блок ${student.pkg}`;
-        sub.appendChild(pkgChip);
-        if(student.frozen){
-          const frozenChip = document.createElement('span');
-          frozenChip.className = 'chip';
-          frozenChip.textContent = '❄ Заморожен';
-          sub.appendChild(frozenChip);
-        }
-        nameWrap.append(name, sub);
-
-        const openBtn = document.createElement('button');
-        openBtn.className = 'btn btn-small btn-ghost open-btn';
-        openBtn.textContent = student.id === activeId ? 'Открыт' : 'Открыть';
-        openBtn.addEventListener('click', () => {
-          activeByRoster.set(key, student.id);
-          saveState();
-          render();
-          setTimeout(() => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}), 80);
-        });
-
-        top.append(toggle, av, nameWrap, openBtn);
-
-        const fin = document.createElement('div');
-        fin.className = 'student-fin';
-        fin.innerHTML = `
-          <div class="mini-stat"><div class="k">Оплачено</div><div class="v">${student.pay}</div></div>
-          <div class="mini-stat"><div class="k">Долг</div><div class="v">${student.debt}</div></div>
-          <div class="mini-stat"><div class="k">Прогресс</div><div class="v">${progressLabel(roster, student)}</div></div>
-        `;
-
-        card.append(top, fin);
-        els.studentList.appendChild(card);
-      });
-    }
-
-    function progressLabel(roster, student){
-      const v = roster.visits.get(student.id) || {m:new Map(),d:new Map(),t:new Map()};
-      let acc = 0;
-      for(let i=0;i<12;i++){
-        const tm = v.t.get(`${i}-m`), td = v.t.get(`${i}-d`);
-        if(!tm && getState(v,'m',i) > 0) acc += 1;
-        if(!td && getState(v,'d',i) > 0) acc += 1;
-      }
-      return `${Math.min(acc, student.pkg)}/${student.pkg}`;
-    }
-
-    function renderDetail(roster, activeStudent, key){
-      els.activeDetail.innerHTML = '';
-      if(!activeStudent){
-        els.activeDetail.innerHTML = '<div class="empty">Сначала выберите ученика в списке.</div>';
-        return;
-      }
-      syncStudentComputed(activeStudent);
-
-      const grid = document.createElement('div');
-      grid.className = 'detail-grid';
-
-      const left = document.createElement('div');
-      left.className = 'detail-card';
-      left.innerHTML = `<h4>${activeStudent.fio}</h4>`;
-      const pkgRow = document.createElement('div');
-      pkgRow.className = 'pkg-row';
-      [4,8,12].forEach(pkg => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'pkg-btn' + (activeStudent.pkg === pkg ? ' active' : '');
-        btn.textContent = `Блок ${pkg}`;
-        btn.addEventListener('click', () => {
-          activeStudent.pkg = pkg;
-          activeStudent.pay = priceFor(pkg);
-          activeStudent.debt = 0;
-          activeStudent.status = 'ok';
-          saveState();
-          render();
-        });
-        pkgRow.appendChild(btn);
-      });
-      left.appendChild(pkgRow);
-
-      const moneyGrid = document.createElement('div');
-      moneyGrid.className = 'money-grid';
-      moneyGrid.style.marginTop = '12px';
-
-      const payBlock = document.createElement('label');
-      payBlock.className = 'money-block';
-      payBlock.innerHTML = '<span class="label">Оплачено</span>';
-      const payInput = document.createElement('input');
-      payInput.className = 'input';
-      payInput.inputMode = 'numeric';
-      payInput.value = String(activeStudent.pay);
-      payInput.addEventListener('input', () => {
-        activeStudent.pay = Math.max(0, Number(payInput.value) || 0);
-        const price = priceFor(activeStudent.pkg);
-        activeStudent.debt = Math.max(0, price - activeStudent.pay);
-        activeStudent.status = statusByPay(activeStudent.pay, price);
-        saveState();
-        render(false);
-      });
-      payBlock.appendChild(payInput);
-
-      const debtBlock = document.createElement('div');
-      debtBlock.className = 'money-block';
-      debtBlock.innerHTML = '<span class="label">Долг</span><div class="value-read">' + activeStudent.debt + '</div>';
-      moneyGrid.append(payBlock, debtBlock);
-      left.appendChild(moneyGrid);
-
-      const right = document.createElement('div');
-      right.className = 'detail-card';
-      right.innerHTML = '<h4>Статус и действия</h4>';
-      const chips = document.createElement('div');
-      chips.className = 'legend';
-      chips.append(
-        statusChip(activeStudent.status),
-        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Пакет: ${priceFor(activeStudent.pkg)}`; return c; })(),
-        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Разовые: ${activeStudent.rCount||0}`; return c; })(),
-        (() => { const c=document.createElement('span'); c.className='chip'; c.textContent=`Бонус: ${activeStudent.bonusCount||0}`; return c; })(),
-      );
-      right.appendChild(chips);
-
-      const actions = document.createElement('div');
-      actions.className = 'detail-actions';
-      actions.style.marginTop = '12px';
-
-      const freezeBtn = document.createElement('button');
-      freezeBtn.className = 'btn btn-small btn-ghost';
-      freezeBtn.textContent = activeStudent.frozen ? 'Разморозить' : 'Заморозка';
-      freezeBtn.addEventListener('click', () => {
-        activeStudent.frozen = !activeStudent.frozen;
-        saveState();
-        render();
-      });
-
-      const transferBtn = document.createElement('button');
-      transferBtn.className = 'btn btn-small btn-blue';
-      transferBtn.textContent = 'Перенести ученика';
-      transferBtn.addEventListener('click', () => transferStudents([activeStudent.id]));
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn btn-small btn-danger full';
-      deleteBtn.textContent = 'Удалить ученика';
-      deleteBtn.addEventListener('click', () => {
-        if(!confirm(`Удалить ${activeStudent.fio}?`)) return;
-        const roster = getRoster(Number(els.yearSel.value), Number(els.monthSel.value));
-        roster.students = roster.students.filter(s => s.id !== activeStudent.id);
-        roster.visits.delete(activeStudent.id);
-        getSelectionSet(key).delete(activeStudent.id);
-        if(activeByRoster.get(key) === activeStudent.id){
-          activeByRoster.delete(key);
-        }
-        saveState();
-        render();
-      });
-
-      actions.append(freezeBtn, transferBtn, deleteBtn);
-      right.appendChild(actions);
-
-      grid.append(left, right);
-      els.activeDetail.appendChild(grid);
-    }
-
-    function renderMatrix(roster, activeStudent){
-      els.matrixWrap.innerHTML = '';
-      if(!activeStudent){
-        els.matrixWrap.innerHTML = '<div class="empty">Нет активного ученика для прогрессной матрицы.</div>';
-        return;
-      }
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const dates = datesMWF(y,m);
-      const v = roster.visits.get(activeStudent.id) || {m:new Map(), d:new Map(), t:new Map()};
-      roster.visits.set(activeStudent.id, v);
-
-      const head = document.createElement('div');
-      head.className = 'matrix-head';
-      head.innerHTML = `<div><strong>${activeStudent.fio}</strong><div class="matrix-note">Пакет ${activeStudent.pkg} • Оплачено ${activeStudent.pay} • Долг ${activeStudent.debt}</div></div>`;
-      els.matrixWrap.appendChild(head);
-
-      const scroll = document.createElement('div');
-      scroll.className = 'matrix-scroll';
-
-      let acc = 0;
-      dates.forEach((date, i) => {
-        const card = document.createElement('div');
-        card.className = 'day-card';
-        const top = document.createElement('div');
-        top.className = 'day-top';
-        top.textContent = `${dm(date)} ${wd(date)}`;
-        card.appendChild(top);
-
-        const ms = getState(v,'m',i), ds = getState(v,'d',i);
-        const tm = v.t.get(`${i}-m`), td = v.t.get(`${i}-d`);
-
-        const mIndex = !tm && ms > 0 ? acc + 1 : null;
-        const dIndex = !td && ds > 0 ? acc + (ms > 0 ? 1 : 0) + 1 : null;
-
-        card.appendChild(renderSlotLine('У', buildSlotNode(activeStudent, v, i, 'm', tm, ms, mIndex, date)));
-        card.appendChild(renderSlotLine('Д', buildSlotNode(activeStudent, v, i, 'd', td, ds, dIndex, date)));
-
-        acc += (!tm && ms > 0 ? 1 : 0) + (!td && ds > 0 ? 1 : 0);
-        scroll.appendChild(card);
-      });
-
-      els.matrixWrap.appendChild(scroll);
-
-      const legend = document.createElement('div');
-      legend.className = 'legend';
-      const items = ['П — пробная','Р — разовая (+600)','БОН — бонусная','жёлтый фон — state 2','красный номер — финал пакета'];
-      items.forEach(text => {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = text;
-        legend.appendChild(chip);
-      });
-      els.matrixWrap.appendChild(legend);
-    }
-
-    function renderSlotLine(label, slotNode){
-      const row = document.createElement('div');
-      row.className = 'slot-line';
-      const ud = document.createElement('div');
-      ud.className = 'ud-label';
-      ud.textContent = label;
-      row.append(ud, slotNode);
-      return row;
-    }
-
-    function buildSlotNode(student, visits, i, kind, tag, state, n, date){
-      const slot = document.createElement('button');
-      slot.type = 'button';
-      slot.className = 'slot';
-      slot.dataset.kind = kind;
-      slot.dataset.index = i;
-
-      const keyT = `${i}-${kind}`;
-      const onLong = () => {
-        openSlotSheet({ studentId: student.id, index: i, kind, date, label: `${dm(date)} ${wd(date)} • ${kind === 'm' ? 'У' : 'Д'}` });
-      };
-      const startHold = () => {
-        touchHold = { fired:false, timer:setTimeout(() => { touchHold.fired = true; onLong(); }, 420) };
-      };
-      const endHold = () => {
-        if(!touchHold) return false;
-        clearTimeout(touchHold.timer);
-        const fired = touchHold.fired;
-        touchHold = null;
-        return fired;
-      };
-
-      slot.addEventListener('pointerdown', startHold);
-      slot.addEventListener('pointerup', () => {
-        const wasLong = endHold();
-        if(wasLong) return;
-        if(!visits.t.get(keyT)){
-          const cur = getState(visits, kind, i);
-          const next = (cur + 1) % 3;
-          setState(visits, kind, i, next);
-          saveState();
-          render(false);
-        }
-      });
-      slot.addEventListener('pointerleave', endHold);
-      slot.addEventListener('pointercancel', endHold);
-      slot.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        onLong();
-      });
-
-      if(tag){
-        slot.classList.add('special');
-        if(tag.type === 'trial') slot.textContent = 'П';
-        if(tag.type === 'single') slot.textContent = tag.n > 1 ? `Р${tag.n}` : 'Р';
-        if(tag.type === 'bonus') slot.textContent = tag.n > 1 ? `БОН${tag.n}` : 'БОН';
-        return slot;
-      }
-      if(n == null || state === 0){
-        slot.innerHTML = '<small>пусто</small>';
-        return slot;
-      }
-      const minN = Math.min(n, student.pkg);
-      const penult = (student.pkg === 12 && minN === 11) || (student.pkg === 8 && minN === 7) || (student.pkg === 4 && minN === 3);
-      const fin = (student.pkg === 12 && minN === 12) || (student.pkg === 8 && minN === 8) || (student.pkg === 4 && minN === 4);
-      if(state === 2 && !(penult || fin)) slot.classList.add('paid');
-      const span = document.createElement('span');
-      span.className = 'counter' + (penult ? ' penult' : '') + (fin ? ' final' : '');
-      span.textContent = `${n}/${student.pkg}`;
-      slot.textContent = '';
-      slot.appendChild(span);
-      return slot;
-    }
-
-    function openSlotSheet(ctx){
-      slotCtx = ctx;
-      els.slotSheetSub.textContent = `${ctx.label} • спец-тип слота`;
-      els.sheetBackdrop.classList.add('open');
-      els.slotSheet.classList.add('open');
-    }
-    function closeSlotSheet(){
-      slotCtx = null;
-      els.sheetBackdrop.classList.remove('open');
-      els.slotSheet.classList.remove('open');
-    }
-
-    function applySlotAction(action){
-      if(!slotCtx) return;
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const roster = getRoster(y,m);
-      const student = roster.students.find(s => s.id === slotCtx.studentId);
-      if(!student) return;
-      const visits = roster.visits.get(student.id) || {m:new Map(), d:new Map(), t:new Map()};
-      roster.visits.set(student.id, visits);
-      const key = `${slotCtx.index}-${slotCtx.kind}`;
-
-      if(action === 'trial'){
-        setState(visits, slotCtx.kind, slotCtx.index, 0);
-        visits.t.set(key, {type:'trial'});
-      } else if(action === 'single'){
-        setState(visits, slotCtx.kind, slotCtx.index, 0);
-        student.rCount = (student.rCount || 0) + 1;
-        visits.t.set(key, {type:'single', n:student.rCount});
-        student.pay = (Number(student.pay) || 0) + 600;
-        const price = priceFor(student.pkg);
-        student.debt = Math.max(0, price - student.pay);
-        student.status = statusByPay(student.pay, price);
-      } else if(action === 'bonus'){
-        setState(visits, slotCtx.kind, slotCtx.index, 0);
-        student.bonusCount = (student.bonusCount || 0) + 1;
-        visits.t.set(key, {type:'bonus', n:student.bonusCount});
-      } else if(action === 'clear'){
-        setState(visits, slotCtx.kind, slotCtx.index, 0);
-        visits.t.delete(key);
-      }
-      saveState();
-      render(false);
-      closeSlotSheet();
-    }
-
-    function openAddModal(){
-      els.addFio.value = '';
-      els.addPkg.value = '12';
-      els.modalBackdrop.classList.add('open');
-      els.addModal.classList.add('open');
-      setTimeout(() => els.addFio.focus(), 40);
-    }
-    function closeAddModal(){
-      els.modalBackdrop.classList.remove('open');
-      els.addModal.classList.remove('open');
-    }
-
-    function addStudent(){
-      const fio = (els.addFio.value || '').trim();
-      if(!fio) return;
-      const pkg = Number(els.addPkg.value) || 12;
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const roster = getRoster(y,m);
-      const price = priceFor(pkg);
-      const id = ++idSeq;
-      const avatar = `https://i.pravatar.cc/64?img=${Math.floor(1 + Math.random()*70)}`;
-      const student = {id, fio, status:'ok', pkg, pay:price, debt:0, avatar, bonusCount:0, rCount:0, frozen:false};
-      roster.students.push(student);
-      roster.visits.set(id, {m:new Map(), d:new Map(), t:new Map()});
-      getSelectionSet(currentKey()).add(id);
-      activeByRoster.set(currentKey(), id);
-      saveState();
-      closeAddModal();
-      render();
-      setTimeout(() => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}), 120);
-    }
-
-    function transferStudents(ids){
-      if(!ids || ids.length === 0){
-        alert('Нет выбранных учеников для переноса.');
-        return;
-      }
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const roster = getRoster(y,m);
-      const [ny,nm] = nextMonth(y,m);
-      const next = getRoster(ny,nm);
-      ids.forEach(id => {
-        const s = roster.students.find(x => x.id === id);
-        if(!s) return;
-        const cloneId = Date.now() + Math.floor(Math.random()*100000);
-        next.students.push({
-          id: cloneId,
-          fio: s.fio,
-          status: 'bad',
-          pkg: s.pkg,
-          pay: 0,
-          debt: priceFor(s.pkg),
-          avatar: s.avatar,
-          bonusCount: 0,
-          rCount: 0,
-          frozen: false,
-        });
-        next.visits.set(cloneId, {m:new Map(), d:new Map(), t:new Map()});
-        getSelectionSet(ymKey(ny,nm)).add(cloneId);
-      });
-      els.yearSel.value = String(ny);
-      els.monthSel.value = String(nm);
-      activeByRoster.delete(currentKey());
-      saveState();
-      render();
-    }
-
-    function transferSelected(){
-      const key = currentKey();
-      const ids = Array.from(getSelectionSet(key));
-      if(ids.length === 0){
-        alert('Выберите учеников тумблерами.');
-        return;
-      }
-      if(!confirm(`Перенести ${ids.length} учен. в следующий месяц?`)) return;
-      transferStudents(ids);
-    }
-
-    function transferWholeGroup(){
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const roster = getRoster(y,m);
-      if(roster.students.length === 0){
-        alert('В группе нет учеников.');
-        return;
-      }
-      if(!confirm(`Перенести всю группу (${roster.students.length}) в следующий месяц?`)) return;
-      transferStudents(roster.students.map(s => s.id));
-    }
-
-    function render(scrollTop = true){
-      const y = Number(els.yearSel.value), m = Number(els.monthSel.value);
-      const roster = getRoster(y,m);
-      roster.students.forEach(syncStudentComputed);
-      const key = currentKey();
-      const filtered = getFilteredStudents(roster);
-      const activeId = getActiveStudentId(key, filtered);
-      const activeStudent = filtered.find(s => s.id === activeId) || null;
-      const selectedCount = getSelectionSet(key).size;
-
-      els.contextLine.textContent = contextText();
-      els.selectedBadge.textContent = `Выбрано: ${selectedCount}`;
-      els.summaryCount.textContent = `Ученики: ${filtered.length}`;
-      els.summaryMonth.textContent = monthText();
-
-      renderStudentList(roster, filtered, key);
-      renderDetail(roster, activeStudent, key);
-      renderMatrix(roster, activeStudent);
-      saveState();
-
-      if(scrollTop){
-        // no-op, preserves current position by default
-      }
-    }
-
-    function populateSelectors(){
-      MONTHS.forEach((month, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.textContent = month;
-        if(idx === 8) opt.selected = true;
-        els.monthSel.appendChild(opt);
-      });
-      for(let y=2024; y<=2030; y++){
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        if(y === 2025) opt.selected = true;
-        els.yearSel.appendChild(opt);
-      }
-    }
-
-    populateSelectors();
-
-    els.btnApply.addEventListener('click', () => render());
-    els.monthSel.addEventListener('change', () => render());
-    els.yearSel.addEventListener('change', () => render());
-    els.searchInput.addEventListener('keydown', e => { if(e.key === 'Enter') render(); });
-    els.disciplineSel.addEventListener('change', render);
-    els.typeSel.addEventListener('change', render);
-    els.groupSel.addEventListener('change', render);
-
-    els.btnAdd.addEventListener('click', openAddModal);
-    els.btnAddCancel.addEventListener('click', closeAddModal);
-    els.btnAddConfirm.addEventListener('click', addStudent);
-    els.modalBackdrop.addEventListener('click', closeAddModal);
-
-    els.btnTransferSel.addEventListener('click', transferSelected);
-    els.btnTransferGroup.addEventListener('click', transferWholeGroup);
-
-    els.sheetBackdrop.addEventListener('click', closeSlotSheet);
-    document.querySelectorAll('[data-slot-action]').forEach(btn => {
-      btn.addEventListener('click', () => applySlotAction(btn.dataset.slotAction));
+    ['discipline','type','group','month','year'].forEach(key => {
+      listView.querySelector(`#f-${key}`).onchange = applyFilters;
     });
 
-    els.btnFocusList.addEventListener('click', () => document.querySelector('.list').scrollIntoView({behavior:'smooth', block:'start'}));
-    els.btnFocusDetail.addEventListener('click', () => els.activeSection.scrollIntoView({behavior:'smooth', block:'start'}));
-    els.btnFocusMatrix.addEventListener('click', () => els.matrixSection.scrollIntoView({behavior:'smooth', block:'start'}));
+    listView.querySelectorAll('[data-open-student]').forEach(btn => btn.onclick = (e) => {
+      app.selectedStudentId = e.currentTarget.dataset.openStudent;
+      app.view = 'student';
+      render();
+    });
+    listView.querySelectorAll('[data-open-progress]').forEach(btn => btn.onclick = (e) => {
+      app.selectedStudentId = e.currentTarget.dataset.openProgress;
+      app.view = 'progress';
+      render();
+    });
+    listView.querySelectorAll('[data-select-transfer]').forEach(btn => btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = e.currentTarget.dataset.selectTransfer;
+      if(app.selectedForTransfer.has(id)) app.selectedForTransfer.delete(id); else app.selectedForTransfer.add(id);
+      render();
+    });
+    listView.querySelectorAll('[data-toggle-active]').forEach(btn => btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = e.currentTarget.dataset.toggleActive;
+      const student = getStudentById(id);
+      if(!student) return;
+      student.active = !student.active;
+      if(!student.active) app.selectedForTransfer.delete(id);
+      render();
+      showToast(student.active ? 'Ученик возвращён в месяц' : 'Ученик исключён из текущего месяца');
+    });
+    listView.querySelectorAll('[data-student-card]').forEach(card => card.onclick = (e) => {
+      if(e.target.closest('button')) return;
+      app.selectedStudentId = e.currentTarget.dataset.studentCard;
+      render();
+    });
+  }
 
+  function bindProgressHandlers(student){
+    progressView.querySelectorAll('[data-slot]').forEach(slotEl => {
+      const index = Number(slotEl.dataset.slot);
+      const part = slotEl.dataset.part;
+      let pressTimer = null;
+      let longPressed = false;
+
+      const start = (ev) => {
+        ev.preventDefault();
+        longPressed = false;
+        pressTimer = setTimeout(() => {
+          longPressed = true;
+          openSlotSheet(student, index, part);
+        }, 420);
+      };
+      const cancel = () => {
+        clearTimeout(pressTimer);
+      };
+      const end = (ev) => {
+        ev.preventDefault();
+        clearTimeout(pressTimer);
+        if(longPressed) return;
+        if(!app.progressUnlocked){
+          showToast('Сначала откройте замок');
+          return;
+        }
+        cycleNormal(student, index, part);
+        render();
+      };
+
+      slotEl.addEventListener('touchstart', start, {passive:false});
+      slotEl.addEventListener('touchend', end, {passive:false});
+      slotEl.addEventListener('touchmove', cancel, {passive:false});
+      slotEl.addEventListener('mousedown', start);
+      slotEl.addEventListener('mouseup', end);
+      slotEl.addEventListener('mouseleave', cancel);
+      slotEl.addEventListener('contextmenu', (e) => { e.preventDefault(); openSlotSheet(student, index, part); });
+    });
+  }
+
+  function applyFilters(){
+    app.discipline = listView.querySelector('#f-discipline').value;
+    app.trainingType = listView.querySelector('#f-type').value;
+    app.group = listView.querySelector('#f-group').value;
+    app.month = Number(listView.querySelector('#f-month').value);
+    app.year = Number(listView.querySelector('#f-year').value);
+    app.query = listView.querySelector('#f-search').value.trim();
+    ensureMonthState();
+    app.selectedForTransfer = new Set([...app.selectedForTransfer].filter(id => getStudentById(id)?.active));
     render();
-  </script>
+  }
+
+  function transferSelectedToNextMonth(){
+    const ids = [...app.selectedForTransfer].filter(id => getStudentById(id)?.active);
+    if(!ids.length){ showToast('Нет выбранных учеников'); return; }
+    const currentKey = monthKey();
+    const next = nextMonth(app.year, app.month);
+    const targetKey = `${next.year}-${String(next.month+1).padStart(2,'0')}`;
+    if(!app.store.has(targetKey)) app.store.set(targetKey, createSeedState());
+    const source = app.store.get(currentKey).students;
+    const target = app.store.get(targetKey).students;
+    ids.forEach(id => {
+      const src = source.find(s => s.id === id);
+      if(!src) return;
+      const exists = target.some(t => t.fullName === src.fullName && t.active);
+      if(!exists){
+        target.push(createStudent({
+          fullName: src.fullName,
+          packageTotal: src.packageTotal,
+          paid: src.paid,
+          active: true,
+        }));
+      }
+    });
+    showToast(`Перенесено: ${ids.length} → ${MONTHS[next.month]} ${next.year}`);
+  }
+
+  function nextMonth(year, month){
+    if(month === 11) return {year: year+1, month:0};
+    return {year, month: month+1};
+  }
+
+  function openAddStudentSheet(){
+    setSheet(`
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title">Добавить ученика</div>
+          <div class="sheet-sub">Добавление только в текущий месяц: ${MONTHS[app.month]} ${app.year}</div>
+        </div>
+        <button class="close" data-close-sheet>×</button>
+      </div>
+      <div class="sheet-group">
+        <label class="field"><span>ФИО</span><input id="add-name" placeholder="Фамилия Имя" /></label>
+        <div class="sheet-grid">
+          <label class="field"><span>Пакет</span><select id="add-package"><option value="4">Блок 4</option><option value="8" selected>Блок 8</option><option value="12">Блок 12</option></select></label>
+          <label class="field"><span>Оплачено</span><input id="add-paid" inputmode="numeric" value="0" /></label>
+        </div>
+        <button class="btn green" id="add-save">Добавить в месяц</button>
+      </div>
+    `);
+    sheet.querySelector('#add-save').onclick = () => {
+      const fullName = sheet.querySelector('#add-name').value.trim();
+      const pkg = Number(sheet.querySelector('#add-package').value);
+      const paid = Number(sheet.querySelector('#add-paid').value || 0);
+      if(!fullName){ showToast('Введите ФИО'); return; }
+      getStudents().push(createStudent({fullName, packageTotal:pkg, paid, active:true}));
+      closeSheet();
+      render();
+      showToast('Ученик добавлен только в текущий месяц');
+    };
+  }
+
+  function openPaymentSheet(student, slotCtx = null){
+    setSheet(`
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title">Внести оплату</div>
+          <div class="sheet-sub">${escapeHtml(student.fullName)} • долг ${student.debt}</div>
+        </div>
+        <button class="close" data-close-sheet>×</button>
+      </div>
+      <div class="sheet-group">
+        <div class="sheet-grid-3">
+          <button class="btn small" data-pay-amount="500">+500</button>
+          <button class="btn small" data-pay-amount="1000">+1000</button>
+          <button class="btn small" data-pay-amount="2000">+2000</button>
+        </div>
+        <button class="btn warn" id="pay-full">Закрыть долг полностью</button>
+        <label class="field"><span>Своя сумма</span><input id="manual-pay" inputmode="numeric" placeholder="Например, 750" /></label>
+        <button class="btn blue" id="manual-pay-btn">Внести сумму</button>
+      </div>
+    `);
+
+    sheet.querySelectorAll('[data-pay-amount]').forEach(btn => btn.onclick = () => applyPayment(student, Number(btn.dataset.payAmount), slotCtx));
+    sheet.querySelector('#pay-full').onclick = () => applyPayment(student, student.debt, slotCtx);
+    sheet.querySelector('#manual-pay-btn').onclick = () => {
+      const val = Number(sheet.querySelector('#manual-pay').value || 0);
+      applyPayment(student, val, slotCtx);
+    };
+  }
+
+  function applyPayment(student, amount, slotCtx = null){
+    amount = Number(amount || 0);
+    if(amount <= 0){ showToast('Сумма должна быть больше 0'); return; }
+    student.paid += amount;
+    refreshStudentDerived(student);
+    if(slotCtx){
+      const slot = getSlot(student, slotCtx.index, slotCtx.part);
+      slot.payment = (slot.payment || 0) + amount;
+      if(slot.kind === 'empty') slot.kind = 'normal-1';
+      setSlot(student, slotCtx.index, slotCtx.part, slot);
+    }
+    closeSheet();
+    render();
+    showToast(`Оплата внесена: +${amount}`);
+  }
+
+  function openSlotSheet(student, index, part){
+    const slot = getSlot(student,index,part);
+    setSheet(`
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title">Слот тренировки</div>
+          <div class="sheet-sub">${escapeHtml(student.fullName)} • ${part.toUpperCase()} • ячейка ${index+1}</div>
+        </div>
+        <button class="close" data-close-sheet>×</button>
+      </div>
+      <div class="sheet-group">
+        <div class="section-title" style="font-size:16px">Тип факта</div>
+        <div class="sheet-grid">
+          <button class="btn small" data-slot-kind="normal-1">Обычная 1/2</button>
+          <button class="btn small" data-slot-kind="normal-2">Обычная 2/2</button>
+          <button class="btn small warn" data-slot-kind="trial">Пробная</button>
+          <button class="btn small" data-slot-kind="single">Разовая (+600)</button>
+          <button class="btn small" data-slot-kind="bonus">Бонусная</button>
+          <button class="btn small danger" data-slot-kind="clear">Очистить слот</button>
+        </div>
+      </div>
+      <div class="sheet-group">
+        <div class="section-title" style="font-size:16px">Оплата по слоту</div>
+        <div class="sheet-grid-3">
+          <button class="btn small" data-slot-pay="500">+500</button>
+          <button class="btn small" data-slot-pay="1000">+1000</button>
+          <button class="btn small" data-slot-pay="2000">+2000</button>
+        </div>
+        <button class="btn blue" id="slot-pay-manual">Внести свою сумму</button>
+      </div>
+    `);
+
+    sheet.querySelectorAll('[data-slot-kind]').forEach(btn => btn.onclick = () => {
+      const kind = btn.dataset.slotKind;
+      if(kind === 'clear') setSlot(student,index,part,null);
+      else {
+        const current = getSlot(student,index,part);
+        current.kind = kind;
+        current.state = kind === 'normal-2' ? 2 : 1;
+        if(kind === 'single' && !current.payment) current.payment = 600;
+        setSlot(student,index,part,current);
+      }
+      closeSheet();
+      render();
+      showToast('Слот обновлён');
+    });
+    sheet.querySelectorAll('[data-slot-pay]').forEach(btn => btn.onclick = () => applyPayment(student, Number(btn.dataset.slotPay), {index, part}));
+    sheet.querySelector('#slot-pay-manual').onclick = () => openPaymentSheet(student, {index, part});
+  }
+
+  function setSheet(html){
+    sheet.innerHTML = html;
+    sheetBackdrop.classList.add('show');
+    sheet.querySelectorAll('[data-close-sheet]').forEach(btn => btn.onclick = closeSheet);
+  }
+  function closeSheet(){
+    sheetBackdrop.classList.remove('show');
+    sheet.innerHTML = '';
+  }
+  sheetBackdrop.addEventListener('click', (e) => { if(e.target === sheetBackdrop) closeSheet(); });
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(showToast.t);
+    showToast.t = setTimeout(() => toast.classList.remove('show'), 1700);
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => {
+    if((btn.dataset.view === 'student' || btn.dataset.view === 'progress') && !getSelectedStudent()){
+      showToast('Сначала выберите ученика');
+      return;
+    }
+    app.view = btn.dataset.view;
+    render();
+  });
+
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  render();
+})();
+</script>
 </body>
 </html>
