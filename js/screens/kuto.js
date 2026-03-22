@@ -441,9 +441,9 @@ export function initKutoScreen(ctx = {}) {
             <span>${esc(student.packageLabel)}</span>
           </div>
           <div class="row-kpis">
-            <div>Оплачено: <span class="${paidCls}">${money(student.paid)}</span></div>
-            <div>Долг: <span class="debt-val">${money(student.debt)}</span></div>
-            <div>Прогресс: <span class="prog-val">${esc(student.progress)}</span></div>
+            <div class="kpi-col"><div class="kpi-label">Оплачено:</div><div class="kpi-value ${paidCls}">${money(student.paid)}</div></div>
+            <div class="kpi-col"><div class="kpi-label">Долг:</div><div class="kpi-value debt-val">${money(student.debt)}</div></div>
+            <div class="kpi-col"><div class="kpi-label">Прогресс:</div><div class="kpi-value prog-val">${esc(student.progress)}</div></div>
           </div>
         </div>
         <div class="row-side">

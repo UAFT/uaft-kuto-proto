@@ -10,6 +10,10 @@ let bootCache = null;
 
 function renderCurrentRoute() {
   appState.route = getInitialRoute();
+  // Clear journal slot when leaving kuto
+  const journalSlot = document.getElementById('headerJournalSlot');
+  if (journalSlot) journalSlot.innerHTML = '';
+
   if (appState.route === 'student-profile') {
     renderStudentProfilePlaceholder();
     return;
@@ -21,6 +25,16 @@ function renderCurrentRoute() {
   if (appState.route === 'event-journal') {
     renderEventJournalPlaceholder();
     return;
+  }
+  // Restore content sections if they were wiped by placeholder screens
+  const content = document.getElementById('content');
+  if (content && !document.getElementById('view-list')) {
+    content.innerHTML = `
+      <section class="view active" id="view-list"></section>
+      <section class="view" id="view-student"></section>
+      <section class="view" id="view-progress"></section>
+      <section class="view" id="view-packages"></section>
+    `;
   }
   initKutoScreen({ bootstrap: bootCache || appState.boot });
 }
