@@ -467,10 +467,11 @@ export function initKutoScreen(ctx = {}) {
             <div class="mini-note">Пакет № ${student.packageNumber} • ${esc(student.packageLabel)}</div>
             <div class="mini-note">Срок действия пакета • ${formatDate(student.startDate)} — ${formatDate(student.activeUntil)}</div>
           </div>
-          <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="studentLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
-        </div>
-        <div class="compact-bar">
-          <div class="chip ${st.cls}">${st.text}</div>
+          <div class="hero-right-stack">
+            <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="studentLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
+            <div class="chip ok">Активен</div>
+            ${student.debt > 0 ? `<div class="chip debt">Долг ${money(student.debt)}</div>` : ''}
+          </div>
         </div>
         <div class="facts">
           <div class="fact"><div class="label">Дата начала пакета</div><div class="value">${formatDate(student.startDate)}</div></div>
