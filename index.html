@@ -45,7 +45,12 @@
     .context-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .field{display:flex;flex-direction:column;gap:6px;min-width:0}
     .field span{font-size:12px;color:var(--muted)}
-    input,select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:15px;padding:12px 12px;outline:none}
+    input,select{width:100%;appearance:none;-webkit-appearance:none;background:linear-gradient(180deg,#1b2130 0%,#151a26 100%);color:var(--text);border:1px solid #31394c;border-radius:15px;padding:12px 14px;outline:none;min-height:46px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field-label{font-size:11px;line-height:1;color:var(--muted);padding-left:4px;letter-spacing:.02em}
+    .select-wrap{position:relative}
+    .select-wrap:after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:12px}
+    .search-field{grid-column:1/-1}
     .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .seg-btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:15px;padding:12px 12px;font-weight:800;cursor:pointer}
     .seg-btn.active{background:#1b2540;border-color:#396bfa;color:#dfe7ff}
@@ -587,18 +592,18 @@
   function renderList(){
     const rows = activeStudents().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
     const entityField = app.trainingType === 'Индивидуальная'
-      ? `<select id="f-trainer">${app.trainersCatalog.map(t => `<option ${app.trainer===t?'selected':''}>${t}</option>`).join('')}</select>`
-      : `<select id="f-group">${app.groupsCatalog.map(g => `<option ${app.group===g?'selected':''}>${g}</option>`).join('')}</select>`;
+      ? `<div class="field"><div class="field-label">Тренер</div><div class="select-wrap"><select id="f-trainer">${app.trainersCatalog.map(t => `<option ${app.trainer===t?'selected':''}>${t}</option>`).join('')}</select></div></div>`
+      : `<div class="field"><div class="field-label">Группа</div><div class="select-wrap"><select id="f-group">${app.groupsCatalog.map(g => `<option ${app.group===g?'selected':''}>${g}</option>`).join('')}</select></div></div>`;
     els.list.innerHTML = `
       </div>
       <div class="card">
         <div class="context-grid">
-          <select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select>
-          <select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select>
+          <div class="field"><div class="field-label">Дисциплина</div><div class="select-wrap"><select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select></div></div>
+          <div class="field"><div class="field-label">Тип тренировки</div><div class="select-wrap"><select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select></div></div>
           ${entityField}
-          <select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select>
-          <select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select>
-          <input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" />
+          <div class="field"><div class="field-label">Месяц</div><div class="select-wrap"><select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select></div></div>
+          <div class="field"><div class="field-label">Год</div><div class="select-wrap"><select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select></div></div>
+          <div class="field search-field"><div class="field-label">Поиск ученика</div><input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" /></div>
         </div>
       </div>
       <div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>
