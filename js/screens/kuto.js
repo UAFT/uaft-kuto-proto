@@ -344,26 +344,26 @@ export function initKutoScreen(ctx = {}) {
   }
 
   function renderHeaderActions(){
-    /* --- Journal button: always in head-right slot when on list view --- */
+    /* --- Right-side header slot: Journal (list view) or Card (student view) --- */
     if(app.view === 'list'){
       els.headerJournalSlot.innerHTML = `<button class="btn-journal" id="headerJournalAction">📋 Журнал событий</button>`;
+    } else if(app.view === 'student' && currentStudent()){
+      els.headerJournalSlot.innerHTML = `<button class="btn-card" id="headerCardAction">Карточка</button>`;
     } else {
       els.headerJournalSlot.innerHTML = '';
     }
     const journalBtn = els.headerJournalSlot.querySelector('#headerJournalAction');
     if(journalBtn) journalBtn.onclick = () => navigate('event-journal');
+    const cardBtn = els.headerJournalSlot.querySelector('#headerCardAction');
+    if(cardBtn) cardBtn.onclick = () => navigate('student-profile');
 
-    /* --- Other header actions (add student, card, add package) --- */
+    /* --- Other header actions (add student, add package) --- */
     let html = '';
     if(app.view === 'list'){
       const addStudentBtn = bootstrap.permissions?.canAddStudentToGroup
         ? `<div class="header-actions-bottom add-student-row"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
         : '';
       html = `<div class="header-actions-stack list-header-actions">${addStudentBtn}</div>`;
-    } else if(app.view === 'student' && currentStudent()){
-      html = `<div class="header-actions-top right-half single-secondary card-row">
-        <button class="btn purple small" id="headerCardAction">Карточка</button>
-      </div>`;
     } else if(app.view === 'packages' && currentStudent()){
       const addPkgBtn = bootstrap.permissions?.canAddPackage
         ? `<div class="header-actions-top full package-add-row"><button class="btn green small" id="headerAddAction">Добавить пакет</button></div>`
@@ -373,7 +373,6 @@ export function initKutoScreen(ctx = {}) {
     els.headerActions.dataset.view = app.view;
     els.headerActions.innerHTML = html;
     const addBtn = els.headerActions.querySelector('#headerAddAction');
-    const cardBtn = els.headerActions.querySelector('#headerCardAction');
     if(addBtn){
       addBtn.onclick = () => {
         if(app.view === 'list') openAddToGroupSheet();
@@ -383,7 +382,6 @@ export function initKutoScreen(ctx = {}) {
         }
       };
     }
-    if(cardBtn) cardBtn.onclick = () => navigate('student-profile');
   }
 
   function render(){
