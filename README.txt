@@ -1,35 +1,33 @@
-UAFT KUTO Modular v18 — Journal Button Fix + Full Modular Build
-================================================================
+UAFT KUTO modular shell based on the approved final monolithic KUTO index.
 
-Структура:
-  index.html              — единая точка входа
-  js/app.js               — bootstrap + TG WebApp init
-  js/router.js            — внутренняя навигация
-  js/state.js             — состояние + capability model (role-aware)
-  js/api.js               — API layer (mock, готов к backend)
-  js/screens/kuto.js      — главный экран KUTO (состав/ученик/прогресс/пакеты)
-  js/screens/student-profile.js  — карточка ученика (placeholder)
-  js/screens/student-packages.js — пакеты ученика (placeholder)
-  js/screens/event-journal.js    — журнал событий (placeholder)
-  styles/main.css         — глобальные стили + sheet + toast
-  styles/kuto.css         — стили KUTO экранов
-  styles/student-profile.css — стили карточки + журнала
+Entry point:
+- index.html
 
-Навигация:
-  KUTO (состав) → клик на ученика → Ученик / Прогресс / Пакеты (табы)
-  KUTO → Журнал событий (кнопка в шапке, правая часть)
-  Ученик → Карточка (кнопка "Карточка →")
-  Все экраны → назад через ← кнопку
+Modules:
+- js/app.js
+- js/router.js
+- js/api.js
+- js/state.js
+- js/screens/kuto.js
+- js/screens/student-profile.js
+- js/screens/student-packages.js
+- js/screens/event-journal.js
 
-Роли:
-  state.js содержит capability model для director/admin/trainer/student
-  UI-элементы скрываются по AppState.can("capability")
+Styles:
+- styles/main.css
+- styles/kuto.css
+- styles/student-profile.css
 
-Backend готовность:
-  api.js — все методы async, mock-данные внутри
-  Заменить на fetch к реальному endpoint
+Demo role switch via query string:
+- ?role=student
+- ?role=trainer
+- ?role=admin
+- ?role=director
 
-Размещение кнопки "Журнал событий":
-  В правой половине шапки, ниже квоты 4/15/20 и замка
-  Цвет: фиолетовый акцент
-  Не между шапкой и зелёной кнопкой — внутри шапки
+Current status:
+- KUTO screen is live and carries over the approved final UI/logic from the monolithic version.
+- student-profile / packages / journal are placeholders for the next stage.
+- Backend integration should be wired through js/api.js and consumed in js/screens/kuto.js.
+
+
+V16: fixed header layout so Add Student button spans full width below header and Journal stays in right half.

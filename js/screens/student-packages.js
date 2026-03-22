@@ -1,32 +1,17 @@
-// js/screens/student-packages.js — Пакеты ученика (placeholder)
+import { navigate } from '../router.js';
+import { appState } from '../state.js';
 
-window.StudentPackagesScreen = (function () {
-  function render(container, params) {
-    container.innerHTML = "";
-    const wrap = document.createElement("div");
-    wrap.className = "profile-screen";
-
-    const topBar = document.createElement("div");
-    topBar.className = "sd-topbar";
-    topBar.innerHTML = '<button class="sd-back-btn">← Назад</button>';
-    wrap.appendChild(topBar);
-
-    const title = document.createElement("div");
-    title.className = "profile-title";
-    title.textContent = "Пакеты ученика";
-    wrap.appendChild(title);
-
-    const ph = document.createElement("div");
-    ph.className = "profile-placeholder";
-    ph.textContent = "Экран пакетов будет доступен после backend-интеграции";
-    wrap.appendChild(ph);
-
-    container.appendChild(wrap);
-
-    wrap.querySelector(".sd-back-btn").addEventListener("click", function () {
-      Router.back();
-    });
-  }
-
-  return { render: render };
-})();
+export function renderStudentPackagesPlaceholder() {
+  const content = document.getElementById('content');
+  const headerSub = document.getElementById('headerSub');
+  const headerActions = document.getElementById('headerActions');
+  const groupStatsBadge = document.getElementById('groupStatsBadge');
+  const globalLockBtn = document.getElementById('globalLockBtn');
+  if (headerSub) headerSub.innerHTML = `${appState.selectedStudentName || 'Пакеты'}<span class="subline">Следующий экран этого же mini-app</span>`;
+  if (headerActions) headerActions.innerHTML = `<button class="btn purple small" id="backToKutoFromPackages">← Назад в KUTO</button>`;
+  if (groupStatsBadge) groupStatsBadge.textContent = 'Пакеты';
+  if (globalLockBtn) { globalLockBtn.textContent = '🔒'; globalLockBtn.classList.remove('unlocked'); }
+  content.innerHTML = `<section class="student-profile-placeholder card"><h2>Пакеты ученика</h2><p>Экран будет собран следующим этапом.</p></section>`;
+  const btn = document.getElementById('backToKutoFromPackages');
+  if (btn) btn.onclick = () => navigate('kuto');
+}
