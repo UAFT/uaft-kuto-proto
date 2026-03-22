@@ -477,9 +477,9 @@ export function initKutoScreen(ctx = {}) {
           <div class="fact"><div class="label">Дата начала пакета</div><div class="value">${formatDate(student.startDate)}</div></div>
           <div class="fact"><div class="label">Активен по</div><div class="value">${formatDate(student.activeUntil)}</div></div>
           <div class="fact cost"><div class="label">Стоимость</div><div class="value">${money(student.price)}</div></div>
-          <div class="fact"><div class="label">Скидка</div><div class="value">${money(student.discount)}</div></div>
-          <div class="fact ${student.paid>0 ? 'ok' : ''}"><div class="label">${paidLabel(student.paid, student.paidDate)}</div><div class="value">${money(student.paid)}</div></div>
-          <div class="fact ${student.debt>0 ? 'debt' : 'ok'}"><div class="label">Долг</div><div class="value">${money(student.debt)}</div></div>
+          <div class="fact discount"><div class="label">Скидка</div><div class="value">${money(student.discount)}</div></div>
+          <div class="fact paid"><div class="label">${paidLabel(student.paid, student.paidDate)}</div><div class="value">${money(student.paid)}</div></div>
+          <div class="fact debt"><div class="label">Долг</div><div class="value">${money(student.debt)}</div></div>
           <div class="fact"><div class="label">Прогресс</div><div class="value">${esc(student.progress)}</div></div>
           <div class="fact"><div class="label">Подрядность</div><div class="value">${student.streak}</div></div>
           <div class="fact"><div class="label">Серия</div><div class="value">${student.seriesTrainings}</div></div>

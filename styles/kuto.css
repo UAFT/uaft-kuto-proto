@@ -126,6 +126,8 @@
     .fact.ok .value{color:#92f1b3}
     .fact.debt .value{color:#ffc1c1}
     .fact.cost .value{color:var(--yellow)}
+    .fact.discount .value{color:#7ec8ff}
+    .fact.paid .value{color:#92f1b3}
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
     .progress-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
