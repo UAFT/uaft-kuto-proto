@@ -67,9 +67,9 @@
     .list-wrap{display:flex;flex-direction:column;gap:8px}
     .row{display:grid;grid-template-columns:52px minmax(0,1fr) 42px;gap:10px;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:10px 11px;cursor:pointer}
     .row.selected{border-color:#3d6cff;box-shadow:0 0 0 2px rgba(61,108,255,.18) inset}
-    .avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .avatar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:68px;padding:2px 0}
     .avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08);font-size:16px;font-weight:900}
-    .row-idx{font-size:12px;line-height:1;color:var(--muted);font-weight:800}
+    .row-idx{font-size:14px;line-height:1.1;color:var(--muted);font-weight:900;margin-top:auto}
     .row-main{min-width:0}
     .fio{font-size:16px;font-weight:900;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row-statusline{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;line-height:1}
@@ -82,7 +82,7 @@
     .row-kpis .debt-val{color:#ffc1c1;font-weight:800}
     .row-kpis .prog-val{color:#92f1b3;font-weight:800}
     .row-meta{display:flex;flex-wrap:nowrap;gap:8px;margin-top:6px;min-width:0;overflow:hidden;white-space:nowrap;font-size:13px;color:var(--muted)}
-    .row-meta .pkg-no{color:var(--text);font-weight:400}
+    .row-meta .pkg-no{color:inherit;font-weight:400}
     .row-meta .dot{opacity:.5}
     .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;font-weight:800}
     .chip.ok{background:rgba(52,197,110,.16);border-color:rgba(52,197,110,.34);color:#92f1b3}
@@ -476,7 +476,7 @@
   function progressTextForPackage(student, pkg){
     if(!pkg) return '—';
     const used = slotsOfPackage(student, pkg.id).length;
-    if(pkg.type==='trial') return used ? 'P' : '0';
+    if(pkg.type==='trial') return `${used}/${pkg.total}`;
     if(pkg.type==='single') return `${used}/${pkg.total}`;
     if(pkg.type==='bonus') return `${used}/${pkg.total}`;
     return `${used}/${pkg.total}`;
