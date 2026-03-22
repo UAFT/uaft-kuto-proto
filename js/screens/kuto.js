@@ -349,8 +349,8 @@ export function initKutoScreen(ctx = {}) {
         ? `<div class="header-actions-bottom"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
         : '';
       html = `<div class="header-actions-stack">
-        <div class="header-actions-top right-half">
-          <button class="btn purple small" id="headerJournalAction">Журнал событий</button>
+        <div class="header-actions-top right-half compact-journal">
+          <button class="btn yellow small" id="headerJournalAction">Журнал событий</button>
         </div>
         ${addStudentBtn}
       </div>`;
