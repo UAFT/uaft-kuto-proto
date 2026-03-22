@@ -125,7 +125,7 @@
     .day-card{width:128px;background:#121621;border:1px solid var(--line);border-radius:20px;padding:11px;display:flex;flex-direction:column;gap:10px}
     .day-date{font-size:18px;font-weight:900;text-align:center;line-height:1.04}
     .day-dow{font-size:12px;color:var(--muted);text-align:center;margin-top:4px}
-    .slot{position:relative;min-height:88px;border-radius:18px;border:1px solid var(--line);background:#171b26;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;cursor:pointer;user-select:none}
+    .slot{position:relative;min-height:88px;border-radius:18px;border:1px solid var(--line);background:#171b26;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;cursor:pointer;user-select:none;appearance:none;-webkit-appearance:none;color:#eef2fb}
     .slot.empty{color:#7f8798}
     .slot.missed{background:rgba(255,96,96,.08);border-color:rgba(255,96,96,.24);color:#ff9090}
     .slot.block{background:rgba(66,123,255,.12);border-color:rgba(66,123,255,.26)}
@@ -134,8 +134,8 @@
     .slot.bonus{background:rgba(169,128,255,.14);border-color:rgba(169,128,255,.32);color:#dec8ff}
     .slot.lateMark{box-shadow:0 0 0 2px rgba(243,156,18,.26) inset;border-color:rgba(243,156,18,.36)}
     .day-date.lateMark{color:var(--orange)}
-    .mainMark{font-size:20px;font-weight:900;line-height:1}
-    .slotSub{font-size:11px;opacity:.92;line-height:1.15}
+    .mainMark{font-size:20px;font-weight:900;line-height:1;color:#f5f8ff}
+    .slotSub{font-size:11px;opacity:1;line-height:1.15;color:#d7e2ff}
     .time-meta{display:grid;grid-template-columns:1fr;gap:4px}
     .time-meta div{font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
     .package-selector{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
@@ -164,8 +164,8 @@
     .sheet-group{display:flex;flex-direction:column;gap:10px;margin-top:12px}
     .segment{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     .segment button.active{border-color:#396bfa;background:#1b2540;color:#dfe7ff}
-    .choice{background:#121621;border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .choice .name{font-weight:800;line-height:1.12}
+    .choice{background:#121621;border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--text);text-align:left}
+    .choice .name{font-weight:800;line-height:1.12;color:#f3f6fd}
     .choice .meta{font-size:12px;color:var(--muted);line-height:1.3}
     .alpha{display:flex;gap:6px;overflow:auto}
     .alpha button{min-width:36px}
