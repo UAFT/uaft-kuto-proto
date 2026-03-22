@@ -225,3 +225,101 @@
   .header-actions-top.right-half.compact-journal{top:-82px;max-width:156px;width:156px}
   .header-actions-top.right-half.single-secondary{top:-82px;max-width:138px;width:138px}
 }
+
+
+/* KUTO_MODULAR_HEADER_JOURNAL_FIX_V1 */
+.title-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  gap:12px;
+}
+.title-row > :first-child{
+  min-width:0;
+}
+.sub{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+.subline{
+  display:block;
+  margin-top:0;
+}
+.head-right{
+  display:flex;
+  justify-content:flex-end;
+  align-items:flex-start;
+  gap:8px;
+  flex-shrink:0;
+}
+.badge{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+}
+.header-actions{
+  width:100%;
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:static;
+}
+.header-actions-stack{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:stretch;
+}
+.header-actions-top,
+.header-actions-bottom{
+  position:static !important;
+  display:flex;
+  width:100%;
+  margin:0;
+}
+.header-actions-top.right-half,
+.header-actions-top.right-half.compact-journal,
+.header-actions-top.right-half.single-secondary{
+  width:min(100%, 176px);
+  max-width:176px;
+  margin-left:auto;
+  justify-content:flex-end;
+}
+.header-actions-top.right-half .btn,
+.header-actions-top.right-half.compact-journal .btn,
+.header-actions-top.right-half.single-secondary .btn{
+  width:100%;
+  min-width:0;
+  padding:9px 10px;
+  border-radius:13px;
+}
+.header-actions-top.full{
+  width:100%;
+}
+.header-actions-top.full .btn,
+.header-actions-bottom .btn{
+  width:100% !important;
+  min-width:0 !important;
+}
+.header-actions[data-view="student"] .header-actions-top.right-half.single-secondary{
+  width:min(100%, 150px);
+  max-width:150px;
+}
+.header-actions[data-view="packages"] .header-actions-top.full{
+  margin-top:0;
+}
+@media (max-width:420px){
+  .header-actions-top.right-half,
+  .header-actions-top.right-half.compact-journal{
+    width:min(100%, 156px);
+    max-width:156px;
+  }
+  .header-actions[data-view="student"] .header-actions-top.right-half.single-secondary{
+    width:min(100%, 138px);
+    max-width:138px;
+  }
+}

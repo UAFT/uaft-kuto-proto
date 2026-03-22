@@ -346,24 +346,25 @@ export function initKutoScreen(ctx = {}) {
     let html = '';
     if(app.view === 'list'){
       const addStudentBtn = bootstrap.permissions?.canAddStudentToGroup
-        ? `<div class="header-actions-bottom"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
+        ? `<div class="header-actions-bottom add-student-row"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
         : '';
-      html = `<div class="header-actions-stack">
-        <div class="header-actions-top right-half compact-journal">
+      html = `<div class="header-actions-stack list-header-actions">
+        <div class="header-actions-top right-half compact-journal journal-row">
           <button class="btn yellow small" id="headerJournalAction">Журнал событий</button>
         </div>
         ${addStudentBtn}
       </div>`;
     } else if(app.view === 'student' && currentStudent()){
-      html = `<div class="header-actions-top right-half single-secondary">
+      html = `<div class="header-actions-top right-half single-secondary card-row">
         <button class="btn purple small" id="headerCardAction">Карточка</button>
       </div>`;
     } else if(app.view === 'packages' && currentStudent()){
       const addPkgBtn = bootstrap.permissions?.canAddPackage
-        ? `<div class="header-actions-top full"><button class="btn green small" id="headerAddAction">Добавить пакет</button></div>`
+        ? `<div class="header-actions-top full package-add-row"><button class="btn green small" id="headerAddAction">Добавить пакет</button></div>`
         : '';
       html = addPkgBtn;
     }
+    els.headerActions.dataset.view = app.view;
     els.headerActions.innerHTML = html;
     const addBtn = els.headerActions.querySelector('#headerAddAction');
     const journalBtn = els.headerActions.querySelector('#headerJournalAction');
