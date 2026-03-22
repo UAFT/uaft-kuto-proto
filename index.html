@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>UAFT • KUTO Mobile v12</title>
+  <title>UAFT • KUTO Mobile Final</title>
   <style>
     :root{
       --bg:#0b0c11;--panel:#141720;--panel2:#171b26;--line:#262b38;--text:#edf0f7;--muted:#9da4b8;
@@ -116,7 +116,7 @@
     .pkg-pill.dim{opacity:.55}
 
     .package-list{display:flex;flex-direction:column;gap:8px}
-    .package-card{background:#121621;border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .package-card{background:#121621;border:2px solid #30374a;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
     .package-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
     .pkg-title{font-size:16px;font-weight:900;line-height:1.08}
     .pkg-meta{display:flex;flex-wrap:wrap;gap:6px}
@@ -588,8 +588,8 @@
           </div>
         </div>
         <div class="row-side">
-          ${frozenMark}
           <button class="btn tiny danger icon-only" title="Убрать из группы" aria-label="Убрать из группы" data-remove-from-group="${student.id}">→</button>
+          ${frozenMark}
         </div>
       </article>
     `;
@@ -1198,10 +1198,10 @@
         <div class="choice"><div><div class="name">Заморозка</div></div><div>${student.frozen ? 'Да' : 'Нет'}</div></div>
       </div>
       <div class="sheet-group">
-        ${(pkg.payments && pkg.payments.length) ? pkg.payments.map(pay => `
+        ${(pkg.payments && pkg.payments.length) ? pkg.payments.map((pay, i) => `
           <div class="choice">
             <div>
-              <div class="name">Оплата ${money(pay.amount)}</div>
+              <div class="name">${paymentEntryTitle(pkg, i)} ${money(pay.amount)}</div>
               <div class="meta">${formatDate(pay.date)} • ${esc(pay.method || '—')}</div>
             </div>
             <div>${money(pay.amount)}</div>
