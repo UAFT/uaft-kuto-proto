@@ -65,12 +65,16 @@
     .sticky-dock.tight{padding:0 12px 8px;background:rgba(11,12,17,.985)}
 
     .list-wrap{display:flex;flex-direction:column;gap:8px}
-    .row{display:grid;grid-template-columns:44px minmax(0,1fr) 42px;gap:10px;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:10px 11px;cursor:pointer}
+    .row{display:grid;grid-template-columns:52px minmax(0,1fr) 42px;gap:10px;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:10px 11px;cursor:pointer}
     .row.selected{border-color:#3d6cff;box-shadow:0 0 0 2px rgba(61,108,255,.18) inset}
+    .avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
     .avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08);font-size:16px;font-weight:900}
+    .row-idx{font-size:12px;line-height:1;color:var(--muted);font-weight:800}
     .row-main{min-width:0}
     .fio{font-size:16px;font-weight:900;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .fio .status-inline{font-size:13px;font-weight:800;margin-left:6px}
+    .row-statusline{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;line-height:1}
+    .row-statusline .dot{opacity:.5}
+    .status-inline{font-size:13px;font-weight:800}
     .status-inline.ok{color:#92f1b3}
     .status-inline.off{color:#ffc1c1}
     .row-kpis .paid-ok{color:#92f1b3;font-weight:800}
@@ -78,7 +82,7 @@
     .row-kpis .debt-val{color:#ffc1c1;font-weight:800}
     .row-kpis .prog-val{color:#92f1b3;font-weight:800}
     .row-meta{display:flex;flex-wrap:nowrap;gap:8px;margin-top:6px;min-width:0;overflow:hidden;white-space:nowrap;font-size:13px;color:var(--muted)}
-    .row-meta b{color:var(--text);font-weight:800}
+    .row-meta .pkg-no{color:var(--text);font-weight:400}
     .row-meta .dot{opacity:.5}
     .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;font-weight:800}
     .chip.ok{background:rgba(52,197,110,.16);border-color:rgba(52,197,110,.34);color:#92f1b3}
@@ -597,12 +601,12 @@
           <input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" />
         </div>
       </div>
-      <div class="list-wrap">${rows.map(listRowHtml).join('')}</div>
+      <div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>
     `;
     bindList();
   }
 
-  function listRowHtml(student){
+  function listRowHtml(student, idx){
     refreshStudentDerived(student);
     const selected = student.id === app.selectedStudentId;
     const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
@@ -610,11 +614,15 @@
     const paidCls = student.debt>0 ? 'paid-partial' : 'paid-ok';
     return `
       <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
-        <div class="avatar">${esc(initials(student.fullName))}</div>
+        <div class="avatar-wrap">
+          <div class="avatar">${esc(initials(student.fullName))}</div>
+          <div class="row-idx">${idx + 1}</div>
+        </div>
         <div class="row-main">
-          <div class="fio">${esc(student.fullName)} <span class="dot">•</span>${activeInline}</div>
+          <div class="fio">${esc(student.fullName)}</div>
+          <div class="row-statusline"><span class="dot">•</span>${activeInline}</div>
           <div class="row-meta">
-            <span><b>Пакет № ${student.packageNumber}</b></span>
+            <span class="pkg-no">Пакет № ${student.packageNumber}</span>
             <span class="dot">•</span>
             <span>${esc(student.packageLabel)}</span>
           </div>
