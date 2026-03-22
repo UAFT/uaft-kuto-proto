@@ -1,2 +1,3 @@
-window.UAFT = window.UAFT || {};
-(window.UAFT.screens = window.UAFT.screens || {})['student_profile'] = { title: 'Профиль ученика' };
+export function initStudentProfile() {
+  // placeholder: Профиль ученика
+}

@@ -1,77 +1,66 @@
-window.UAFT = window.UAFT || {};
+export const appState = {
+  bootstrapped: false,
+  currentScreen: 'kuto',
+  auth: null,
+  permissions: null,
+};
 
-(function(ns){
-  const ROLE_CAPABILITIES = {
+export function permissionsForRole(role) {
+  const table = {
     student: {
       canViewKuto: true,
-      canViewStudentDetails: true,
-      canViewPackages: true,
-      canViewFinancials: true,
-      canEditTraining: false,
-      canManagePayments: false,
-      canManagePackages: false,
       canManageGroupMembers: false,
-      canFreezeExtend: false
+      canAddPackage: false,
+      canMarkTraining: false,
+      canEditStudent: false,
+      canViewFinancials: true,
+      canFreezePackage: false,
+      canExtendPackage: false,
+      canEnterPayment: false,
     },
     trainer: {
       canViewKuto: true,
-      canViewStudentDetails: true,
-      canViewPackages: true,
-      canViewFinancials: false,
-      canEditTraining: true,
-      canManagePayments: false,
-      canManagePackages: false,
       canManageGroupMembers: false,
-      canFreezeExtend: false
+      canAddPackage: false,
+      canMarkTraining: true,
+      canEditStudent: false,
+      canViewFinancials: false,
+      canFreezePackage: false,
+      canExtendPackage: false,
+      canEnterPayment: false,
     },
     admin: {
       canViewKuto: true,
-      canViewStudentDetails: true,
-      canViewPackages: true,
-      canViewFinancials: false,
-      canEditTraining: true,
-      canManagePayments: false,
-      canManagePackages: true,
       canManageGroupMembers: true,
-      canFreezeExtend: true
+      canAddPackage: true,
+      canMarkTraining: true,
+      canEditStudent: true,
+      canViewFinancials: false,
+      canFreezePackage: true,
+      canExtendPackage: true,
+      canEnterPayment: false,
     },
     director: {
       canViewKuto: true,
-      canViewStudentDetails: true,
-      canViewPackages: true,
-      canViewFinancials: true,
-      canEditTraining: true,
-      canManagePayments: true,
-      canManagePackages: true,
       canManageGroupMembers: true,
-      canFreezeExtend: true
-    }
-  };
-
-  function getRoleCapabilities(role){
-    return Object.assign({}, ROLE_CAPABILITIES.student, ROLE_CAPABILITIES[role] || {});
-  }
-
-  const state = {
-    boot: null,
-    route: 'kuto',
-    currentUser: null,
-    role: 'director',
-    permissions: getRoleCapabilities('director'),
-    ui: {
-      kutoSubView: 'list', // list | student | progress | packages
-      selectedStudentId: null,
-      selectedPackageIdByStudent: {},
-      editUnlocked: false,
-      groupSearch: '',
-      poolQuery: '',
-      poolLetter: 'Все',
-      packageScrollByStudent: {},
-      progressScrollByStudent: {}
+      canAddPackage: true,
+      canMarkTraining: true,
+      canEditStudent: true,
+      canViewFinancials: true,
+      canFreezePackage: true,
+      canExtendPackage: true,
+      canEnterPayment: true,
     },
-    modal: null
   };
+  return table[role] || table.director;
+}
 
-  ns.state = state;
-  ns.getRoleCapabilities = getRoleCapabilities;
-})(window.UAFT);
+export function setAuth(auth) {
+  appState.auth = auth;
+  appState.permissions = auth.permissions;
+  appState.bootstrapped = true;
+}
+
+export function setScreen(screen) {
+  appState.currentScreen = screen;
+}

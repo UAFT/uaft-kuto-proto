@@ -1,19 +1,10 @@
-window.UAFT = window.UAFT || {};
+import { appState, setScreen } from './state.js';
+import { initKutoScreen } from './screens/kuto.js';
 
-(function(ns){
-  const routes = {
-    kuto: () => ns.screens.kuto.render()
-  };
-
-  function setRoute(route){
-    ns.state.route = route;
-    render();
-  }
-
-  function render(){
-    const view = routes[ns.state.route] || routes.kuto;
-    view();
-  }
-
-  ns.router = { setRoute, render };
-})(window.UAFT);
+export function startRouter() {
+  setScreen('kuto');
+  initKutoScreen({
+    role: appState.auth?.role || 'director',
+    permissions: appState.permissions || {},
+  });
+}
