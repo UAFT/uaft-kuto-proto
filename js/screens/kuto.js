@@ -1,5 +1,6 @@
 import { navigate } from '../router.js';
 import { setSelectedStudent } from '../state.js';
+import { fetchKutoGroupList } from '../api.js';
 
 export function initKutoScreen(ctx = {}) {
   const bootstrap = ctx.bootstrap || { role: 'director', permissions: {} };
@@ -9,29 +10,37 @@ export function initKutoScreen(ctx = {}) {
   const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
   const LETTERS = ['Все','А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Э','Ю','Я'];
 
+  const now = new Date();
+  const initialMonth = String(bootstrap.initialMonth || '').match(/^(\d{4})-(\d{2})$/);
   const app = {
     view: 'list',
-    discipline: 'Кикбоксинг',
+    discipline: '—',
     trainingType: 'Групповая',
-    group: 'Группа A',
-    trainer: 'Тренер Алексей',
-    month: 8,
-    year: 2025,
+    group: '',
+    groupId: bootstrap.initialGroupId || '',
+    groupIdByLabel: {},
+    groupLabelById: {},
+    trainer: '',
+    month: initialMonth ? Math.max(0, Number(initialMonth[2]) - 1) : now.getMonth(),
+    year: initialMonth ? Number(initialMonth[1]) : now.getFullYear(),
     trainingDateLimit: 12,
-    demoTodayIso: '2025-09-20',
+    demoTodayIso: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,
     progressScrollByStudent: {},
     query: '',
     poolQuery: '',
     poolLetter: 'Все',
     editUnlocked: false,
-    selectedStudentId: 'u2',
+    selectedStudentId: null,
     selectedPackageByStudent: {},
     groupLimit: 20,
-    groupRhythm: ['ПН','СР','ПТ'],
-    groupTotal: 15,
+    groupRhythm: [],
+    groupTotal: 0,
+    loading: true,
+    loadError: '',
+    backendMode: true,
     store: new Map(),
-    groupsCatalog: ['Группа A','Группа B','Группа C','Группа D'],
-    trainersCatalog: ['Тренер Алексей','Тренер Ирина','Тренер Руслан'],
+    groupsCatalog: [],
+    trainersCatalog: [],
     studentPool: [
       {id:'sp1', fullName:'Смирнов Егор', phone:'+7 989 000-11-21', dob:'2012-05-03', sex:'М'},
       {id:'sp2', fullName:'Зайцева Полина', phone:'+7 989 000-21-52', dob:'2011-12-19', sex:'Ж'},
@@ -155,6 +164,7 @@ export function initKutoScreen(ctx = {}) {
   }
 
   function createSeedState(){
+    if(app.backendMode) return {students: []};
     const s1 = createStudent({
       id:'u1', fullName:'Иванов Иван', phone:'+7 989 123-45-67', dob:'2010-04-19', sex:'М',
       seriesTrainings:12, streak:5,
@@ -207,6 +217,132 @@ export function initKutoScreen(ctx = {}) {
       progressSlots:{0:{packageId:'p41', start:'18:30', arrival:'18:30'},3:{packageId:'p41', start:'18:30', arrival:'18:31'}}
     });
     return { students: [s1,s2,s3,s4] };
+  }
+
+
+  function buildPackageHistoryFromApi(item){
+    const packageId = item.package_activation_id || `api_pkg_${item.id || uid()}_${monthKey()}`;
+    const total = Math.max(0, Number(item.progress_total || 0));
+    const used = Math.max(0, Number(item.progress_used || 0));
+    const type = item.package_type || (total === 1 ? 'single' : 'block');
+    const label = item.package_label || '—';
+    const history = [
+      pkg(
+        packageId,
+        Number(item.package_number || 0),
+        label,
+        type,
+        total,
+        currentMonthStart(),
+        currentMonthEnd(),
+        Number(item.cost || 0),
+        Number(item.paid || 0),
+        Number(item.discount || 0),
+        true,
+        true,
+        item.paid_date || null
+      )
+    ];
+    history[0].backendActivationId = packageId;
+    history[0].backendKodPaketa = item.kod_paketa || '';
+    const slots = {};
+    for(let i = 0; i < used; i += 1){
+      slots[i] = { packageId, start: '18:30', arrival: '18:30' };
+    }
+    return { packageId, history, slots };
+  }
+
+  function mapApiStudentToLocal(item){
+    const mapped = item || {};
+    const built = buildPackageHistoryFromApi(mapped);
+    const student = createStudent({
+      id: mapped.id || uid(),
+      fullName: mapped.full_name || mapped.fio || 'Без имени',
+      phone: mapped.phone || '',
+      dob: mapped.dob || '',
+      sex: mapped.sex || '—',
+      active: mapped.active !== false,
+      frozen: !!mapped.frozen,
+      seriesTrainings: Number(mapped.series_trainings || 0),
+      streak: Number(mapped.streak || mapped.progress_used || 0),
+      packageHistory: built.history,
+      mainPackageId: built.packageId,
+      progressSlots: built.slots,
+      hadTrial: String(mapped.package_type || '').toLowerCase() === 'trial'
+    });
+    student.backend = { ...mapped };
+    student.packageHistory[0].number = Number(mapped.package_number || 0);
+    if(student.packageHistory[0].number <= 0){
+      student.packageHistory[0].number = 0;
+    }
+    refreshStudentDerived(student);
+    return student;
+  }
+
+  function applyGroupPayload(payload){
+    if(payload?.permissions){
+      bootstrap.permissions = payload.permissions;
+    }
+    if(payload?.role){
+      bootstrap.role = payload.role;
+    }
+    const context = payload?.context || {};
+    app.groupId = context.id_gruppy || app.groupId || '';
+    app.group = context.group_name || app.group || '';
+    app.discipline = context.discipline || app.discipline || '—';
+    app.trainingType = context.training_type || 'Групповая';
+    app.groupRhythm = Array.isArray(context.rhythm) ? context.rhythm.filter(Boolean) : [];
+    app.groupTotal = Number(context.group_total || 0);
+    app.groupLimit = Number(context.group_limit || app.groupLimit || 20);
+    const groups = Array.isArray(payload?.groups) ? payload.groups : [];
+    app.groupsCatalog = groups.map(g => g?.label).filter(Boolean);
+    app.groupIdByLabel = {};
+    app.groupLabelById = {};
+    groups.forEach(g => {
+      const label = String(g?.label || '').trim();
+      const value = String(g?.value || '').trim();
+      if(label){
+        app.groupIdByLabel[label] = value || label;
+      }
+      if(value){
+        app.groupLabelById[value] = label || value;
+      }
+    });
+    if(app.groupId && app.groupLabelById[app.groupId]){
+      app.group = app.groupLabelById[app.groupId];
+    }
+    const studentsFromApi = Array.isArray(payload?.students) ? payload.students.map(mapApiStudentToLocal) : [];
+    app.store.set(monthKey(), { students: studentsFromApi });
+    const preferredId = app.selectedStudentId;
+    const stillExists = preferredId && studentsFromApi.some(s => s.id === preferredId);
+    app.selectedStudentId = stillExists ? preferredId : (studentsFromApi[0]?.id || null);
+    ensureSelected();
+  }
+
+  async function loadGroupData({ preserveSelection = true } = {}){
+    app.loading = true;
+    app.loadError = '';
+    if(!preserveSelection){
+      app.selectedStudentId = null;
+    }
+    render();
+    try{
+      const payload = await fetchKutoGroupList({
+        idGruppy: app.groupId || '',
+        month: monthKey(),
+        limit: app.groupLimit || 20,
+        q: '',
+        chatId: bootstrap.chatId || '',
+        role: bootstrap.role || ''
+      });
+      applyGroupPayload(payload);
+    }catch(err){
+      console.error('kuto_group_load_error', err);
+      app.loadError = err?.message || 'Не удалось загрузить состав группы';
+    }finally{
+      app.loading = false;
+      render();
+    }
   }
 
   function monthState(){ const key = monthKey(); if(!app.store.has(key)) app.store.set(key, createSeedState()); return app.store.get(key); }
@@ -386,7 +522,7 @@ export function initKutoScreen(ctx = {}) {
 
   function render(){
     const act = activeStudents().length;
-    els.headerSub.innerHTML = `${esc(fullContext())}<span class="subline">Ритм группы • ${app.groupRhythm.map(esc).join(' • ')}</span>`;
+    els.headerSub.innerHTML = `${esc(fullContext())}<span class="subline">Ритм группы • ${(app.groupRhythm.length ? app.groupRhythm.map(esc).join(' • ') : '—')}</span>`;
     els.groupStatsBadge.textContent = `${act} / ${app.groupTotal} / ${app.groupLimit}`;
     renderHeaderActions();
     els.globalLockBtn.textContent = app.editUnlocked ? '🔓' : '🔒';
@@ -402,6 +538,11 @@ export function initKutoScreen(ctx = {}) {
     const entityField = app.trainingType === 'Индивидуальная'
       ? `<div class="field"><div class="field-label">Тренер</div><button class="ctx-btn" id="f-trainer"><span class="val">${esc(app.trainer)}</span><span class="chev">▾</span></button></div>`
       : `<div class="field"><div class="field-label">Группа</div><button class="ctx-btn" id="f-group"><span class="val">${esc(app.group)}</span><span class="chev">▾</span></button></div>`;
+    const listBody = app.loading
+      ? `<div class="card">Загрузка состава группы…</div>`
+      : app.loadError
+        ? `<div class="card">Ошибка загрузки: ${esc(app.loadError)}</div>`
+        : `<div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>`;
     els.list.innerHTML = `
       <div class="card">
         <div class="context-grid">
@@ -413,7 +554,7 @@ export function initKutoScreen(ctx = {}) {
           <div class="field search-field"><div class="field-label">Поиск ученика</div><input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" /></div>
         </div>
       </div>
-      <div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>
+      ${listBody}
     `;
     bindList();
   }
@@ -423,7 +564,7 @@ export function initKutoScreen(ctx = {}) {
     const selected = student.id === app.selectedStudentId;
     const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
     const activeInline = `<span class="status-inline ${student.active===false ? 'off' : 'ok'}">${student.active===false ? 'Не активен' : 'Активен'}</span>`;
-    const paidCls = student.debt>0 ? 'paid-partial' : 'paid-ok';
+    const pkgMeta = student.packageNumber ? `<span class="pkg-no">Пакет № ${student.packageNumber}</span><span class="dot">•</span>` : '';
     return `
       <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
         <div class="avatar-wrap">
@@ -434,14 +575,16 @@ export function initKutoScreen(ctx = {}) {
           <div class="fio">${esc(student.fullName)}</div>
           <div class="row-statusline"><span class="dot">•</span>${activeInline}</div>
           <div class="row-meta">
-            <span class="pkg-no">Пакет № ${student.packageNumber}</span>
+            ${pkgMeta}
+            <span>${esc(student.packageLabel || '—')}</span>
             <span class="dot">•</span>
-            <span>${esc(student.packageLabel)}</span>
+            <span>Прогресс ${esc(student.progress || '0/0')}</span>
           </div>
-          <div class="row-kpis">
-            <div class="kpi-col"><div class="kpi-label">Оплачено:</div><div class="kpi-value ${paidCls}">${money(student.paid)}</div></div>
-            <div class="kpi-col"><div class="kpi-label">Долг:</div><div class="kpi-value debt-val">${money(student.debt)}</div></div>
-            <div class="kpi-col"><div class="kpi-label">Прогресс:</div><div class="kpi-value prog-val">${esc(student.progress)}</div></div>
+          <div class="row-kpis row-kpis-finance">
+            <div class="kpi-col"><div class="kpi-label">Стоимость</div><div class="kpi-value cost-val">${money(student.price)}</div></div>
+            <div class="kpi-col"><div class="kpi-label">Скидка</div><div class="kpi-value discount-val">${money(student.discount)}</div></div>
+            <div class="kpi-col"><div class="kpi-label">Оплачено</div><div class="kpi-value paid-val">${money(student.paid)}</div></div>
+            <div class="kpi-col"><div class="kpi-label">Долг</div><div class="kpi-value debt-val">${money(student.debt)}</div></div>
           </div>
         </div>
         <div class="row-side">
@@ -606,12 +749,12 @@ export function initKutoScreen(ctx = {}) {
   }
 
   function bindList(){
-    els.list.querySelector('#f-discipline').onclick = () => openContextChoice('Дисциплина','discipline',['Кикбоксинг','Бокс']);
-    els.list.querySelector('#f-type').onclick = () => openContextChoice('Тип тренировки','type',['Групповая','Индивидуальная']);
+    els.list.querySelector('#f-discipline').onclick = () => openContextChoice('Дисциплина','discipline',[app.discipline]);
+    els.list.querySelector('#f-type').onclick = () => openContextChoice('Тип тренировки','type',['Групповая']);
     const entity = app.trainingType === 'Индивидуальная' ? 'trainer' : 'group';
     els.list.querySelector(`#f-${entity}`).onclick = () => openContextChoice(app.trainingType === 'Индивидуальная' ? 'Тренер' : 'Группа', entity, app.trainingType === 'Индивидуальная' ? app.trainersCatalog : app.groupsCatalog);
     els.list.querySelector('#f-month').onclick = () => openContextChoice('Месяц','month', MONTHS.map((m,i)=>({label:m,value:i})));
-    els.list.querySelector('#f-year').onclick = () => openContextChoice('Год','year', [2024,2025,2026,2027].map(y=>({label:String(y),value:y})));
+    els.list.querySelector('#f-year').onclick = () => openContextChoice('Год','year', [app.year-1, app.year, app.year+1].map(y=>({label:String(y),value:y})));
     els.list.querySelector('#f-search').addEventListener('input', applyFilters);
     els.list.querySelectorAll('[data-open-student]').forEach(row => row.onclick = (e) => {
       if(e.target.closest('button')) return;
@@ -791,14 +934,25 @@ export function initKutoScreen(ctx = {}) {
     if(key==='month') app.month = Number(value);
     else if(key==='year') app.year = Number(value);
     else if(key==='type'){
-      app.trainingType = value;
-      if(value === 'Индивидуальная' && !app.trainer) app.trainer = app.trainersCatalog[0] || 'Тренер 1';
-      if(value === 'Групповая' && !app.group) app.group = app.groupsCatalog[0] || 'Группа A';
-    } else if(key==='group') app.group = value;
-    else if(key==='trainer') app.trainer = value;
-    else if(key==='discipline') app.discipline = value;
+      if(value !== 'Групповая'){
+        showToast('Индивидуальный контекст подключим следующим этапом');
+        return;
+      }
+      app.trainingType = 'Групповая';
+    } else if(key==='group'){
+      app.group = value;
+      app.groupId = app.groupIdByLabel[value] || app.groupId || '';
+    } else if(key==='trainer'){
+      showToast('Индивидуальный контекст подключим следующим этапом');
+      return;
+    } else if(key==='discipline'){
+      app.discipline = value;
+    }
     monthState();
     ensureSelected();
+    if(['month','year','group'].includes(key)){
+      void loadGroupData();
+    }
   }
 
   function toggleLock(){
@@ -1171,6 +1325,7 @@ export function initKutoScreen(ctx = {}) {
   els.globalLockBtn.onclick = toggleLock;
 
   monthState(); render();
+  void loadGroupData({ preserveSelection: false });
 })();
 
 }

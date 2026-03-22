@@ -90,8 +90,9 @@
     .status-inline{font-size:13px;font-weight:800}
     .status-inline.ok{color:#92f1b3}
     .status-inline.off{color:#ffc1c1}
-    .row-kpis .paid-ok{color:#92f1b3;font-weight:800}
-    .row-kpis .paid-partial{color:var(--yellow);font-weight:800}
+    .row-kpis .cost-val{color:var(--yellow);font-weight:800}
+    .row-kpis .discount-val{color:#7ec8ff;font-weight:800}
+    .row-kpis .paid-val,.row-kpis .paid-ok,.row-kpis .paid-partial{color:#92f1b3;font-weight:800}
     .row-kpis .debt-val{color:#ffc1c1;font-weight:800}
     .row-kpis .prog-val{color:#92f1b3;font-weight:800}
     .row-meta{display:flex;flex-wrap:nowrap;gap:8px;margin-top:6px;min-width:0;overflow:hidden;white-space:nowrap;font-size:13px;color:var(--muted)}
@@ -106,7 +107,7 @@
     .chip.debt{background:rgba(255,96,96,.16);border-color:rgba(255,96,96,.34);color:#ffc1c1}
     .chip.activePkg{background:#1b2540;border-color:#396bfa;color:#dfe7ff}
     .row-side{display:flex;flex-direction:column;gap:6px;align-items:flex-end;justify-content:flex-start}
-    .row-kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:7px;font-size:12px;color:var(--muted)}
+    .row-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px;font-size:12px;color:var(--muted)}
     .kpi-col{display:flex;flex-direction:column;gap:1px}
     .kpi-label{font-size:11px;color:var(--muted);font-weight:400}
     .kpi-value{font-size:13px;font-weight:800}
