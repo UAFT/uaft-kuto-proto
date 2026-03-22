@@ -70,6 +70,13 @@
     .avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4f74ff,#1a1e2a);border:2px solid rgba(255,255,255,.08);font-size:16px;font-weight:900}
     .row-main{min-width:0}
     .fio{font-size:16px;font-weight:900;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fio .status-inline{font-size:13px;font-weight:800;margin-left:6px}
+    .status-inline.ok{color:#92f1b3}
+    .status-inline.off{color:#ffc1c1}
+    .row-kpis .paid-ok{color:#92f1b3;font-weight:800}
+    .row-kpis .paid-partial{color:var(--yellow);font-weight:800}
+    .row-kpis .debt-val{color:#ffc1c1;font-weight:800}
+    .row-kpis .prog-val{color:#92f1b3;font-weight:800}
     .row-meta{display:flex;flex-wrap:nowrap;gap:8px;margin-top:6px;min-width:0;overflow:hidden;white-space:nowrap;font-size:13px;color:var(--muted)}
     .row-meta b{color:var(--text);font-weight:800}
     .row-meta .dot{opacity:.5}
@@ -597,25 +604,24 @@
 
   function listRowHtml(student){
     refreshStudentDerived(student);
-    const st = statusChip(student, true);
     const selected = student.id === app.selectedStudentId;
     const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
-    const stateLabel = student.frozen ? '' : st.text;
+    const activeInline = `<span class="status-inline ${student.active===false ? 'off' : 'ok'}">${student.active===false ? 'Не активен' : 'Активен'}</span>`;
+    const paidCls = student.debt>0 ? 'paid-partial' : 'paid-ok';
     return `
       <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
         <div class="avatar">${esc(initials(student.fullName))}</div>
         <div class="row-main">
-          <div class="fio">${esc(student.fullName)}</div>
+          <div class="fio">${esc(student.fullName)} <span class="dot">•</span>${activeInline}</div>
           <div class="row-meta">
             <span><b>Пакет № ${student.packageNumber}</b></span>
             <span class="dot">•</span>
             <span>${esc(student.packageLabel)}</span>
-            ${stateLabel ? `<span class="dot">•</span><span>${stateLabel}</span>` : ''}
           </div>
           <div class="row-kpis">
-            <div>Оплачено: ${student.paid}</div>
-            <div>Долг: ${student.debt}</div>
-            <div>Прогресс: ${esc(student.progress)}</div>
+            <div>Оплачено: <span class="${paidCls}">${money(student.paid)}</span></div>
+            <div>Долг: <span class="debt-val">${money(student.debt)}</span></div>
+            <div>Прогресс: <span class="prog-val">${esc(student.progress)}</span></div>
           </div>
         </div>
         <div class="row-side">
