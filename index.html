@@ -72,6 +72,9 @@
     .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;font-weight:800}
     .chip.ok{background:rgba(52,197,110,.16);border-color:rgba(52,197,110,.34);color:#92f1b3}
     .chip.frozen{background:rgba(66,123,255,.16);border-color:rgba(66,123,255,.34);color:#b8cfff}
+    .icon-chip{width:32px;height:32px;padding:0;display:grid;place-items:center;border-radius:12px;font-size:18px;font-weight:900}
+    .late{color:#ff8e8e}
+    .subline{display:block;margin-top:4px}
     .chip.debt{background:rgba(255,96,96,.16);border-color:rgba(255,96,96,.34);color:#ffc1c1}
     .chip.activePkg{background:#1b2540;border-color:#396bfa;color:#dfe7ff}
     .row-side{display:flex;flex-direction:column;gap:6px;align-items:flex-end;justify-content:flex-start}
@@ -215,6 +218,7 @@
     selectedStudentId: 'u2',
     selectedPackageByStudent: {},
     groupLimit: 20,
+    groupRhythm: ['ПН','СР','ПТ'],
     groupTotal: 15,
     store: new Map(),
     groupsCatalog: ['Группа A','Группа B','Группа C','Группа D'],
@@ -272,8 +276,12 @@
   function dateIso(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
   function isPastTrainingDate(dt){ return dateIso(dt) < app.demoTodayIso; }
 
-  function pkg(id, number, label, type, total, startDate, activeUntil, price, paid, discount, current=false, open=true, paidDate=null){
-    return {id, number, label, type, total, startDate, activeUntil, price, paid, discount, current, open, progress:'0', discipline:app.discipline, paidDate: paidDate || startDate};
+  function isLate(arrival, start){ return !!arrival && !!start && String(arrival) > String(start); }
+
+  function pkg(id, number, label, type, total, startDate, activeUntil, price, paid, discount, current=false, open=true, paidDate=null, payments=null){
+    const basePayments = payments || (paid > 0 ? [{amount: Number(paid||0), date: (paidDate || startDate), method:'Наличные'}] : []);
+    const totalPaid = basePayments.reduce((s,x)=>s+Number(x.amount||0),0);
+    return {id, number, label, type, total, startDate, activeUntil, price, paid: totalPaid, discount, current, open, progress:'0', discipline:app.discipline, paidDate: paidDate || startDate, payments: basePayments};
   }
 
   function createStudent(data){
@@ -334,7 +342,7 @@
       packageHistory:[
         pkg('p21',7,'Блок 12','block',12,'2025-07-01','2025-07-29',4000,4000,0,false,false),
         pkg('p22',8,'Блок 12','block',12,'2025-08-01','2025-08-29',4000,4000,0,false,false),
-        pkg('p23',9,'Блок 12','block',12,'2025-09-01','2025-09-29',4000,2500,0,true,true),
+        pkg('p23',9,'Блок 12','block',12,'2025-09-01','2025-09-29',4000,0,0,true,true,'2025-09-08',[{amount:2500,date:'2025-09-01',method:'Наличные'},{amount:1000,date:'2025-09-08',method:'Безналичные'}]),
         pkg('p24',10,'Бонус 2','bonus',2,'2025-09-10','2025-09-29',0,0,0,false,true)
       ],
       mainPackageId:'p23',
@@ -523,7 +531,7 @@
 
   function render(){
     const act = activeStudents().length;
-    els.headerSub.textContent = fullContext();
+    els.headerSub.innerHTML = `${esc(fullContext())}<span class="subline">Ритм группы • ${app.groupRhythm.map(esc).join(' • ')}</span>`;
     els.groupStatsBadge.textContent = `${act} / ${app.groupTotal} / ${app.groupLimit}`;
     renderHeaderActions();
     els.globalLockBtn.textContent = app.editUnlocked ? '🔓' : '🔒';
@@ -560,6 +568,8 @@
     refreshStudentDerived(student);
     const st = statusChip(student, true);
     const selected = student.id === app.selectedStudentId;
+    const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
+    const stateLabel = student.frozen ? '' : st.text;
     return `
       <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
         <div class="avatar">${esc(initials(student.fullName))}</div>
@@ -569,8 +579,7 @@
             <span><b>Пакет № ${student.packageNumber}</b></span>
             <span class="dot">•</span>
             <span>${esc(student.packageLabel)}</span>
-            <span class="dot">•</span>
-            <span>${st.text}</span>
+            ${stateLabel ? `<span class="dot">•</span><span>${stateLabel}</span>` : ''}
           </div>
           <div class="row-kpis">
             <div>Оплачено: ${student.paid}</div>
@@ -579,6 +588,7 @@
           </div>
         </div>
         <div class="row-side">
+          ${frozenMark}
           <button class="btn tiny danger icon-only" title="Убрать из группы" aria-label="Убрать из группы" data-remove-from-group="${student.id}">→</button>
         </div>
       </article>
@@ -660,6 +670,7 @@
           </div>
           <div class="meter-track"><div class="meter-fill" style="width:${percent}%"></div></div>
         </div>
+        <div class="compact-bar"><div class="chip">Ритм группы • ${app.groupRhythm.join(' • ')}</div></div>
         <div class="month-strip" id="progressStrip"><div class="days">${days.map((d,i)=>dayCard(student,d,i)).join('')}</div></div>
       </div>
     `;
@@ -685,7 +696,7 @@
         </button>
         <div class="time-meta">
           <div>Старт: ${slot?.start || '18:30'}</div>
-          <div>Приход: ${slot?.arrival || '—'}</div>
+          <div class="${slot && isLate(slot.arrival, slot.start) ? 'late' : ''}">Приход: ${slot?.arrival || '—'}${slot && isLate(slot.arrival, slot.start) ? ' 🔥' : ''}</div>
         </div>
       </article>
     `;
@@ -726,9 +737,9 @@
         <div class="pkg-meta">
           <div class="chip">Прогресс ${esc(pkg.progress || '0')}</div>
           <div class="chip">Стоимость ${money(pkg.price)}</div>
+          <div class="chip ${debt>0 ? 'debt' : 'ok'}">Долг ${money(debt)}</div>
           <div class="chip">Оплачено ${money(pkg.paid)} • ${formatDate(pkg.paidDate)}</div>
           <div class="chip">Скидка ${money(pkg.discount)}</div>
-          <div class="chip ${debt>0 ? 'debt' : 'ok'}">Долг ${money(debt)}</div>
         </div>
       </article>
     `;
@@ -1074,16 +1085,27 @@
       <div class="sheet-group">
         ${debt>0 ? `<button class="btn warn" id="pay-full-debt">Закрыть долг полностью</button>` : ''}
         <label class="field"><span>Сумма</span><input id="manual-pay" inputmode="numeric" placeholder="Введите сумму" /></label>
+        <label class="field"><span>Форма оплаты</span><input type="hidden" id="pay-method" value="Наличные" /><div class="seg" id="pay-method-seg"><button type="button" class="seg-btn active" data-method="Наличные">Наличные</button><button type="button" class="seg-btn" data-method="Безналичные">Безналичные</button></div></label>
         <button class="btn blue" id="pay-manual">Сохранить</button>
       </div>`);
-    if(debt>0) els.sheet.querySelector('#pay-full-debt').onclick = () => applyPayment(student, debt);
-    els.sheet.querySelector('#pay-manual').onclick = () => applyPayment(student, Number(els.sheet.querySelector('#manual-pay').value||0));
+    const methodSeg = els.sheet.querySelector('#pay-method-seg');
+    if(methodSeg){
+      methodSeg.querySelectorAll('[data-method]').forEach(btn => btn.onclick = () => {
+        els.sheet.querySelector('#pay-method').value = btn.dataset.method;
+        methodSeg.querySelectorAll('[data-method]').forEach(x => x.classList.toggle('active', x===btn));
+      });
+    }
+    if(debt>0) els.sheet.querySelector('#pay-full-debt').onclick = () => applyPayment(student, debt, els.sheet.querySelector('#pay-method').value);
+    els.sheet.querySelector('#pay-manual').onclick = () => applyPayment(student, Number(els.sheet.querySelector('#manual-pay').value||0), els.sheet.querySelector('#pay-method').value);
   }
 
-  function applyPayment(student, amount){
+  function applyPayment(student, amount, method='Наличные'){
     amount = Number(amount||0); if(amount<=0){ showToast('Сумма должна быть больше 0'); return; }
     const main = currentMainPackage(student); if(!main){ showToast('Нет активного пакета'); return; }
+    if(!main.payments) main.payments = [];
+    main.payments.push({amount, date: app.demoTodayIso, method});
     main.paid = Number(main.paid||0) + amount;
+    main.paidDate = app.demoTodayIso;
     refreshStudentDerived(student);
     closeSheet(); render(); showToast(`Оплата: ${amount}`);
   }
@@ -1176,11 +1198,22 @@
         <div class="choice"><div><div class="name">Заморозка</div></div><div>${student.frozen ? 'Да' : 'Нет'}</div></div>
       </div>
       <div class="sheet-group">
+        ${(pkg.payments && pkg.payments.length) ? pkg.payments.map(pay => `
+          <div class="choice">
+            <div>
+              <div class="name">Оплата ${money(pay.amount)}</div>
+              <div class="meta">${formatDate(pay.date)} • ${esc(pay.method || '—')}</div>
+            </div>
+            <div>${money(pay.amount)}</div>
+          </div>
+        `).join('') : ''}
+      </div>
+      <div class="sheet-group">
         ${slots.length ? slots.map(({idx,slot}) => `
           <div class="choice">
             <div>
               <div class="name">${String(datesMWF(app.year, app.month, app.trainingDateLimit)[idx].getDate()).padStart(2,'0')}.${String(datesMWF(app.year, app.month, app.trainingDateLimit)[idx].getMonth()+1).padStart(2,'0')}</div>
-              <div class="meta">Старт ${esc(slot?.start || '18:30')} • Приход ${esc(slot?.arrival || '—')}</div>
+              <div class="meta">Старт ${esc(slot?.start || '18:30')} • <span class="${slot && isLate(slot.arrival, slot.start) ? 'late' : ''}">Приход ${esc(slot?.arrival || '—')}${slot && isLate(slot.arrival, slot.start) ? ' 🔥' : ''}</span></div>
             </div>
             <div>${esc(slotVisual(student, idx).main)}</div>
           </div>
