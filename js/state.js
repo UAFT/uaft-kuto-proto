@@ -1,4 +1,3 @@
-
 export const ROLE_CAPABILITIES = {
   student: {
     canViewKuto: true,
@@ -47,10 +46,17 @@ export const appState = {
   role: 'director',
   permissions: ROLE_CAPABILITIES.director,
   boot: null,
+  selectedStudentId: null,
+  selectedStudentName: '',
 };
 
 export function setBootstrap(boot) {
   appState.boot = boot;
   appState.role = boot.role;
   appState.permissions = boot.permissions;
+}
+
+export function setSelectedStudent(id, name='') {
+  appState.selectedStudentId = id;
+  appState.selectedStudentName = name;
 }
