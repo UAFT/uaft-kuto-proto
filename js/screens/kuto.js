@@ -1,22 +1,10 @@
-export function initKutoScreen() {
+export function initKutoScreen(ctx = {}) {
+  const bootstrap = ctx.bootstrap || { role: 'director', permissions: {} };
 
+(() => {
   const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
   const LETTERS = ['Все','А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Э','Ю','Я'];
-
-  const roleCtx = window.__UAFT_ROLE__ || { role: 'director', permissions: {} };
-  const perms = {
-    canViewKuto: true,
-    canManageGroupMembers: true,
-    canAddPackage: true,
-    canMarkTraining: true,
-    canEditStudent: true,
-    canViewFinancials: true,
-    canFreezePackage: true,
-    canExtendPackage: true,
-    canEnterPayment: true,
-    ...(roleCtx.permissions || {})
-  };
 
   const app = {
     view: 'list',
@@ -90,15 +78,17 @@ export function initKutoScreen() {
   function progressMarkers(student, pkg){
     const total = Number(pkg?.total || 0);
     if(!total) return '';
-    const slots = slotsOfPackage(student, pkg.id);
+    const slotIndexes = slotsOfPackage(student, pkg.id);
     return `<div class="meter-markers">${Array.from({length: total}).map((_,i)=>{
-      const slot=slots[i];
+      const slotIndex = slotIndexes[i];
+      if(slotIndex === undefined || slotIndex === null) return `<div class="m-dot empty">${i+1}</div>`;
+      const slot = getSlot(student, slotIndex);
       if(!slot) return `<div class="m-dot empty">${i+1}</div>`;
       const late = isLate(slot.arrival, slot.start);
       return `<div class="m-dot ${late ? 'late' : 'done'}">${i+1}</div>`;
     }).join('')}</div>`;
   }
-  function requireUnlocked(msg='Откройте замок'){ if(!perms.canMarkTraining){ showToast('Только просмотр'); return false; } if(app.editUnlocked) return true; showToast(msg); return false; }
+  function requireUnlocked(msg='Откройте замок'){ if(app.editUnlocked) return true; showToast(msg); return false; }
   function scrollTop(){ els.content.scrollTop = 0; }
   function firstLetter(name){ return (String(name||'').trim()[0] || '').toUpperCase(); }
 
@@ -274,7 +264,7 @@ export function initKutoScreen() {
   function progressTextForPackage(student, pkg){
     if(!pkg) return '—';
     const used = slotsOfPackage(student, pkg.id).length;
-    if(pkg.type==='trial') return used ? 'P' : '0';
+    if(pkg.type==='trial') return `${used}/${pkg.total}`;
     if(pkg.type==='single') return `${used}/${pkg.total}`;
     if(pkg.type==='bonus') return `${used}/${pkg.total}`;
     return `${used}/${pkg.total}`;
@@ -351,9 +341,9 @@ export function initKutoScreen() {
 
   function renderHeaderActions(){
     let html = '';
-    if(app.view === 'list' && perms.canManageGroupMembers){
+    if(app.view === 'list'){
       html = `<button class="btn green small" id="headerAddAction">Добавить ученика в группу</button>`;
-    } else if(app.view === 'packages' && currentStudent() && perms.canAddPackage){
+    } else if(app.view === 'packages' && currentStudent()){
       html = `<button class="btn green small" id="headerAddAction">Добавить пакет</button>`;
     }
     els.headerActions.innerHTML = html;
@@ -376,7 +366,6 @@ export function initKutoScreen() {
     renderHeaderActions();
     els.globalLockBtn.textContent = app.editUnlocked ? '🔓' : '🔒';
     els.globalLockBtn.classList.toggle('unlocked', app.editUnlocked);
-    els.globalLockBtn.style.display = perms.canMarkTraining ? '' : 'none';
     renderList(); renderStudent(); renderProgress(); renderPackages();
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view===app.view));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -386,50 +375,53 @@ export function initKutoScreen() {
   function renderList(){
     const rows = activeStudents().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
     const entityField = app.trainingType === 'Индивидуальная'
-      ? `<select id="f-trainer">${app.trainersCatalog.map(t => `<option ${app.trainer===t?'selected':''}>${t}</option>`).join('')}</select>`
-      : `<select id="f-group">${app.groupsCatalog.map(g => `<option ${app.group===g?'selected':''}>${g}</option>`).join('')}</select>`;
+      ? `<div class="field"><div class="field-label">Тренер</div><button class="ctx-btn" id="f-trainer"><span class="val">${esc(app.trainer)}</span><span class="chev">▾</span></button></div>`
+      : `<div class="field"><div class="field-label">Группа</div><button class="ctx-btn" id="f-group"><span class="val">${esc(app.group)}</span><span class="chev">▾</span></button></div>`;
     els.list.innerHTML = `
       </div>
       <div class="card">
         <div class="context-grid">
-          <select id="f-discipline"><option ${app.discipline==='Кикбоксинг'?'selected':''}>Кикбоксинг</option><option ${app.discipline==='Бокс'?'selected':''}>Бокс</option></select>
-          <select id="f-type"><option ${app.trainingType==='Групповая'?'selected':''}>Групповая</option><option ${app.trainingType==='Индивидуальная'?'selected':''}>Индивидуальная</option></select>
+          <div class="field"><div class="field-label">Дисциплина</div><button class="ctx-btn" id="f-discipline"><span class="val">${esc(app.discipline)}</span><span class="chev">▾</span></button></div>
+          <div class="field"><div class="field-label">Тип тренировки</div><button class="ctx-btn" id="f-type"><span class="val">${esc(app.trainingType)}</span><span class="chev">▾</span></button></div>
           ${entityField}
-          <select id="f-month">${MONTHS.map((m,i)=>`<option value="${i}" ${app.month===i?'selected':''}>${m}</option>`).join('')}</select>
-          <select id="f-year">${[2024,2025,2026,2027].map(y=>`<option value="${y}" ${app.year===y?'selected':''}>${y}</option>`).join('')}</select>
-          <input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" />
+          <div class="field"><div class="field-label">Месяц</div><button class="ctx-btn" id="f-month"><span class="val">${MONTHS[app.month]}</span><span class="chev">▾</span></button></div>
+          <div class="field"><div class="field-label">Год</div><button class="ctx-btn" id="f-year"><span class="val">${app.year}</span><span class="chev">▾</span></button></div>
+          <div class="field search-field"><div class="field-label">Поиск ученика</div><input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" /></div>
         </div>
       </div>
-      <div class="list-wrap">${rows.map(listRowHtml).join('')}</div>
+      <div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>
     `;
     bindList();
   }
 
-  function listRowHtml(student){
+  function listRowHtml(student, idx){
     refreshStudentDerived(student);
-    const st = statusChip(student, true);
     const selected = student.id === app.selectedStudentId;
     const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
-    const stateLabel = student.frozen ? '' : st.text;
+    const activeInline = `<span class="status-inline ${student.active===false ? 'off' : 'ok'}">${student.active===false ? 'Не активен' : 'Активен'}</span>`;
+    const paidCls = student.debt>0 ? 'paid-partial' : 'paid-ok';
     return `
       <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
-        <div class="avatar">${esc(initials(student.fullName))}</div>
+        <div class="avatar-wrap">
+          <div class="avatar">${esc(initials(student.fullName))}</div>
+          <div class="row-idx">${idx + 1}</div>
+        </div>
         <div class="row-main">
           <div class="fio">${esc(student.fullName)}</div>
+          <div class="row-statusline"><span class="dot">•</span>${activeInline}</div>
           <div class="row-meta">
-            <span><b>Пакет № ${student.packageNumber}</b></span>
+            <span class="pkg-no">Пакет № ${student.packageNumber}</span>
             <span class="dot">•</span>
             <span>${esc(student.packageLabel)}</span>
-            ${stateLabel ? `<span class="dot">•</span><span>${stateLabel}</span>` : ''}
           </div>
           <div class="row-kpis">
-            <div>Оплачено: ${student.paid}</div>
-            <div>Долг: ${student.debt}</div>
-            <div>Прогресс: ${esc(student.progress)}</div>
+            <div>Оплачено: <span class="${paidCls}">${money(student.paid)}</span></div>
+            <div>Долг: <span class="debt-val">${money(student.debt)}</span></div>
+            <div>Прогресс: <span class="prog-val">${esc(student.progress)}</span></div>
           </div>
         </div>
         <div class="row-side">
-          ${perms.canManageGroupMembers ? `<button class=\"btn tiny danger icon-only\" title=\"Убрать из группы\" aria-label=\"Убрать из группы\" data-remove-from-group=\"${student.id}\">→</button>` : ''}
+          <button class="btn tiny warn icon-only" title="Убрать из группы" aria-label="Убрать из группы" data-remove-from-group="${student.id}">➜</button>
           ${frozenMark}
         </div>
       </article>
@@ -471,10 +463,10 @@ export function initKutoScreen() {
       </div>
       <div class="card">
         <div class="actions">
-          ${perms.canFreezePackage ? `<button class="btn small blue" id="btnFreeze">${student.frozen ? 'Снять заморозку' : 'Заморозить'}</button>` : ''}
-          ${perms.canExtendPackage ? `<button class="btn small green" id="btnExtend">Продлить пакет +7</button>` : ''}
-          ${perms.canEnterPayment ? `<button class="btn small warn" id="btnPayStudent">${payBtnLabel}</button>` : ''}
-          ${perms.canManageGroupMembers ? `<button class="btn small danger" id="btnRemoveFromStudent">Убрать из группы</button>` : ''}
+          <button class="btn small blue" id="btnFreeze">${student.frozen ? 'Снять заморозку' : 'Заморозить'}</button>
+          <button class="btn small green" id="btnExtend">Продлить пакет +7</button>
+          <button class="btn small warn" id="btnPayStudent">${payBtnLabel}</button>
+          <button class="btn small danger" id="btnRemoveFromStudent">Убрать из группы</button>
         </div>
       </div>
     `;
@@ -509,7 +501,6 @@ export function initKutoScreen() {
             <div class="progress-meter-title">Посещаемость пакета</div>
             <div class="chip">${percent}%</div>
           </div>
-          <div class="meter-track"><div class="meter-fill" style="width:${percent}%"></div></div>
           ${selected ? progressMarkers(student, selected) : ''}
         </div>
         <div class="compact-bar"><div class="chip">Ритм группы • ${app.groupRhythm.join(' • ')}</div></div>
@@ -576,7 +567,6 @@ export function initKutoScreen() {
             <div class="progress-meter-title">Прогресс пакета</div>
             <div class="chip">${packagePercent(pkg)}%</div>
           </div>
-          <div class="meter-track"><div class="meter-fill" style="width:${packagePercent(pkg)}%"></div></div>
           ${student ? progressMarkers(student, pkg) : ''}
         </div>
         <div class="pkg-meta">
@@ -591,10 +581,12 @@ export function initKutoScreen() {
   }
 
   function bindList(){
-    const bindIds = ['discipline','type','month','year'];
-    bindIds.forEach(k => els.list.querySelector(`#f-${k}`).onchange = applyFilters);
+    els.list.querySelector('#f-discipline').onclick = () => openContextChoice('Дисциплина','discipline',['Кикбоксинг','Бокс']);
+    els.list.querySelector('#f-type').onclick = () => openContextChoice('Тип тренировки','type',['Групповая','Индивидуальная']);
     const entity = app.trainingType === 'Индивидуальная' ? 'trainer' : 'group';
-    els.list.querySelector(`#f-${entity}`).onchange = applyFilters;
+    els.list.querySelector(`#f-${entity}`).onclick = () => openContextChoice(app.trainingType === 'Индивидуальная' ? 'Тренер' : 'Группа', entity, app.trainingType === 'Индивидуальная' ? app.trainersCatalog : app.groupsCatalog);
+    els.list.querySelector('#f-month').onclick = () => openContextChoice('Месяц','month', MONTHS.map((m,i)=>({label:m,value:i})));
+    els.list.querySelector('#f-year').onclick = () => openContextChoice('Год','year', [2024,2025,2026,2027].map(y=>({label:String(y),value:y})));
     els.list.querySelector('#f-search').addEventListener('input', applyFilters);
     els.list.querySelectorAll('[data-open-student]').forEach(row => row.onclick = (e) => {
       if(e.target.closest('button')) return;
@@ -728,17 +720,58 @@ export function initKutoScreen() {
   }
 
   function applyFilters(){
-    app.discipline = els.list.querySelector('#f-discipline').value;
-    app.trainingType = els.list.querySelector('#f-type').value;
-    if(app.trainingType === 'Индивидуальная'){
-      app.trainer = els.list.querySelector('#f-trainer').value;
-    } else {
-      app.group = els.list.querySelector('#f-group').value;
-    }
-    app.month = Number(els.list.querySelector('#f-month').value);
-    app.year = Number(els.list.querySelector('#f-year').value);
-    app.query = els.list.querySelector('#f-search').value.trim();
+    const search = els.list.querySelector('#f-search');
+    app.query = search ? search.value.trim() : app.query;
     monthState(); ensureSelected(); render();
+  }
+
+
+  function openContextChoice(title, key, options){
+    setSheet(`
+      <div class="sheet-head">
+        <div><div class="sheet-title">${title}</div><div class="sheet-sub">Выберите значение</div></div>
+        <button class="close" data-close-sheet>×</button>
+      </div>
+      <div class="sheet-group" id="ctxChoiceBody"></div>
+    `);
+    const body = els.sheet.querySelector('#ctxChoiceBody');
+    (options||[]).forEach(opt => {
+      const value = typeof opt === 'object' ? opt.value : opt;
+      const label = typeof opt === 'object' ? opt.label : opt;
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<div class="name">${esc(label)}</div>${String(getContextValue(key))===String(value) ? '<div class="chip ok">Выбрано</div>' : ''}`;
+      btn.onclick = () => {
+        setContextValue(key, value);
+        closeSheet();
+        render();
+      };
+      body.appendChild(btn);
+    });
+  }
+
+  function getContextValue(key){
+    if(key==='month') return app.month;
+    if(key==='year') return app.year;
+    if(key==='type') return app.trainingType;
+    if(key==='group') return app.group;
+    if(key==='trainer') return app.trainer;
+    if(key==='discipline') return app.discipline;
+    return '';
+  }
+
+  function setContextValue(key, value){
+    if(key==='month') app.month = Number(value);
+    else if(key==='year') app.year = Number(value);
+    else if(key==='type'){
+      app.trainingType = value;
+      if(value === 'Индивидуальная' && !app.trainer) app.trainer = app.trainersCatalog[0] || 'Тренер 1';
+      if(value === 'Групповая' && !app.group) app.group = app.groupsCatalog[0] || 'Группа A';
+    } else if(key==='group') app.group = value;
+    else if(key==='trainer') app.trainer = value;
+    else if(key==='discipline') app.discipline = value;
+    monthState();
+    ensureSelected();
   }
 
   function toggleLock(){
@@ -1104,8 +1137,9 @@ export function initKutoScreen() {
   }
 
   document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => setView(btn.dataset.view));
-  els.globalLockBtn.onclick = () => { if(!perms.canMarkTraining){ showToast('Только просмотр'); return; } toggleLock(); };
+  els.globalLockBtn.onclick = toggleLock;
 
   monthState(); render();
+})();
 
 }

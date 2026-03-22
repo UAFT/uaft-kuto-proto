@@ -1,21 +1,30 @@
-UAFT KUTO App — modular shell
+UAFT KUTO modular shell based on the approved final monolithic KUTO index.
 
-Структура:
-- index.html — вход в app
-- js/app.js — bootstrap
-- js/router.js — навигационный каркас
-- js/api.js — demo API bootstrap
-- js/state.js — состояние + role/capabilities
-- js/screens/kuto.js — текущий экран KUTO
-- js/screens/student-profile.js — placeholder
-- js/screens/student-packages.js — placeholder
-- js/screens/event-journal.js — placeholder
+Entry point:
+- index.html
+
+Modules:
+- js/app.js
+- js/router.js
+- js/api.js
+- js/state.js
+- js/screens/kuto.js
+- js/screens/student-profile.js
+- js/screens/student-packages.js
+- js/screens/event-journal.js
+
+Styles:
 - styles/main.css
 - styles/kuto.css
 - styles/student-profile.css
 
-Тест ролей:
+Demo role switch via query string:
 - ?role=student
 - ?role=trainer
 - ?role=admin
 - ?role=director
+
+Current status:
+- KUTO screen is live and carries over the approved final UI/logic from the monolithic version.
+- student-profile / packages / journal are placeholders for the next stage.
+- Backend integration should be wired through js/api.js and consumed in js/screens/kuto.js.
