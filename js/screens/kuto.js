@@ -345,12 +345,8 @@ export function initKutoScreen(ctx = {}) {
   function renderHeaderActions(){
     let html = '';
     if(app.view === 'list'){
-      const addBtn = bootstrap.permissions?.canAddStudentToGroup
-        ? `<button class="btn green small" id="headerAddAction">Добавить ученика в группу</button>`
-        : '';
-      html = `<div class="header-actions-grid">
+      html = `<div class="header-actions-grid right-half">
         <button class="btn purple small" id="headerJournalAction">Журнал событий</button>
-        ${addBtn}
       </div>`;
     } else if(app.view === 'student' && currentStudent()){
       html = `<div class="header-actions-grid single-secondary">
@@ -397,8 +393,11 @@ export function initKutoScreen(ctx = {}) {
     const entityField = app.trainingType === 'Индивидуальная'
       ? `<div class="field"><div class="field-label">Тренер</div><button class="ctx-btn" id="f-trainer"><span class="val">${esc(app.trainer)}</span><span class="chev">▾</span></button></div>`
       : `<div class="field"><div class="field-label">Группа</div><button class="ctx-btn" id="f-group"><span class="val">${esc(app.group)}</span><span class="chev">▾</span></button></div>`;
+    const addStudentSticky = bootstrap.permissions?.canAddStudentToGroup
+      ? `<div class="sticky-dock tight list-add-dock"><button class="btn green small" id="listAddStudentBtn">Добавить ученика в группу</button></div>`
+      : '';
     els.list.innerHTML = `
-      </div>
+      ${addStudentSticky}
       <div class="card">
         <div class="context-grid">
           <div class="field"><div class="field-label">Дисциплина</div><button class="ctx-btn" id="f-discipline"><span class="val">${esc(app.discipline)}</span><span class="chev">▾</span></button></div>
@@ -601,6 +600,8 @@ export function initKutoScreen(ctx = {}) {
   }
 
   function bindList(){
+    const listAddBtn = els.list.querySelector('#listAddStudentBtn');
+    if(listAddBtn) listAddBtn.onclick = () => openAddToGroupSheet();
     els.list.querySelector('#f-discipline').onclick = () => openContextChoice('Дисциплина','discipline',['Кикбоксинг','Бокс']);
     els.list.querySelector('#f-type').onclick = () => openContextChoice('Тип тренировки','type',['Групповая','Индивидуальная']);
     const entity = app.trainingType === 'Индивидуальная' ? 'trainer' : 'group';
