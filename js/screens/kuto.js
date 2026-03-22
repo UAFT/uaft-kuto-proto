@@ -1,1173 +1,854 @@
-import { navigate } from '../router.js';
-import { setSelectedStudent } from '../state.js';
+// js/screens/kuto.js — KUTO Main Screen
+// Состав, Ученик, Прогресс, Пакеты — всё внутри одного экрана с табами
 
-export function initKutoScreen(ctx = {}) {
-  const bootstrap = ctx.bootstrap || { role: 'director', permissions: {} };
+window.KutoScreen = (function () {
+  let _container = null;
+  let _view = "roster"; // roster | student | progress | packages
+  let _selectedStudentId = null;
+  let _lastTapTime = 0;
+  let _lastTapDate = null;
 
-(() => {
-  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  const WEEK = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
-  const LETTERS = ['Все','А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Э','Ю','Я'];
+  // ─── Helpers ───
+  const MONTHS = [
+    "Январь","Февраль","Март","Апрель","Май","Июнь",
+    "Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"
+  ];
 
-  const app = {
-    view: 'list',
-    discipline: 'Кикбоксинг',
-    trainingType: 'Групповая',
-    group: 'Группа A',
-    trainer: 'Тренер Алексей',
-    month: 8,
-    year: 2025,
-    trainingDateLimit: 12,
-    demoTodayIso: '2025-09-20',
-    progressScrollByStudent: {},
-    query: '',
-    poolQuery: '',
-    poolLetter: 'Все',
-    editUnlocked: false,
-    selectedStudentId: 'u2',
-    selectedPackageByStudent: {},
-    groupLimit: 20,
-    groupRhythm: ['ПН','СР','ПТ'],
-    groupTotal: 15,
-    store: new Map(),
-    groupsCatalog: ['Группа A','Группа B','Группа C','Группа D'],
-    trainersCatalog: ['Тренер Алексей','Тренер Ирина','Тренер Руслан'],
-    studentPool: [
-      {id:'sp1', fullName:'Смирнов Егор', phone:'+7 989 000-11-21', dob:'2012-05-03', sex:'М'},
-      {id:'sp2', fullName:'Зайцева Полина', phone:'+7 989 000-21-52', dob:'2011-12-19', sex:'Ж'},
-      {id:'sp3', fullName:'Кузнецов Максим', phone:'+7 989 000-34-77', dob:'2014-01-27', sex:'М'},
-      {id:'sp4', fullName:'Иванов Иван', phone:'+7 989 111-22-33', dob:'2010-09-12', sex:'М'}
-    ],
-    groupPool: [
-      {id:'gp1', fullName:'Лазарев Никита', phone:'+7 989 777-10-10', dob:'2011-03-07', sex:'М'},
-      {id:'gp2', fullName:'Тарасова Вера', phone:'+7 989 888-22-22', dob:'2012-08-21', sex:'Ж'}
-    ]
-  };
-
-  const els = {
-    headerSub: document.getElementById('headerSub'),
-    headerActions: document.getElementById('headerActions'),
-    groupStatsBadge: document.getElementById('groupStatsBadge'),
-    globalLockBtn: document.getElementById('globalLockBtn'),
-    list: document.getElementById('view-list'),
-    student: document.getElementById('view-student'),
-    progress: document.getElementById('view-progress'),
-    packages: document.getElementById('view-packages'),
-    content: document.getElementById('content'),
-    sheetBackdrop: document.getElementById('sheetBackdrop'),
-    sheet: document.getElementById('sheet'),
-    toast: document.getElementById('toast')
-  };
-
-  function uid(){ return Math.random().toString(36).slice(2,10); }
-  function monthKey(){ return `${app.year}-${String(app.month+1).padStart(2,'0')}`; }
-  function initials(name){ return String(name || '').split(' ').filter(Boolean).slice(0,2).map(s => (s[0] || '').toUpperCase()).join(''); }
-  function clone(v){ return JSON.parse(JSON.stringify(v)); }
-  function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function formatDate(iso){ if(!iso) return '—'; const [y,m,d] = String(iso).split('-'); return y&&m&&d ? `${d}.${m}.${y}` : iso; }
-  function addDays(iso, days){ const dt=new Date(iso+'T00:00:00'); dt.setDate(dt.getDate()+days); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
-  function money(v){ return String(v || 0); }
-  function paymentTitle(payments, i){
-    if(!payments || !payments.length) return 'Оплата';
-    if(payments.length===1){
-      const p=payments[0];
-      return Number(p.amount||0) >= 0 ? (i===0 && payments.length===1 && Number(p.amount||0)>0 ? 'Оплата' : 'Оплата') : 'Оплата';
-    }
-    return i===0 ? 'Частичная оплата' : 'Доплата';
-  }
-  function paidLabel(paid, paidDate){
-    return Number(paid||0) > 0 && paidDate ? `Оплачено • ${formatDate(paidDate)}` : 'Оплачено';
-  }
-  function progressMarkers(student, pkg){
-    const total = Number(pkg?.total || 0);
-    if(!total) return '';
-    const slotIndexes = slotsOfPackage(student, pkg.id);
-    return `<div class="meter-markers">${Array.from({length: total}).map((_,i)=>{
-      const slotIndex = slotIndexes[i];
-      if(slotIndex === undefined || slotIndex === null) return `<div class="m-dot empty">${i+1}</div>`;
-      const slot = getSlot(student, slotIndex);
-      if(!slot) return `<div class="m-dot empty">${i+1}</div>`;
-      const late = isLate(slot.arrival, slot.start);
-      return `<div class="m-dot ${late ? 'late' : 'done'}">${i+1}</div>`;
-    }).join('')}</div>`;
-  }
-  function requireUnlocked(msg='Откройте замок'){ if(app.editUnlocked) return true; showToast(msg); return false; }
-  function scrollTop(){ els.content.scrollTop = 0; }
-  function firstLetter(name){ return (String(name||'').trim()[0] || '').toUpperCase(); }
-
-  function currentMonthStart(){
-    return `${app.year}-${String(app.month+1).padStart(2,'0')}-01`;
-  }
-  function currentMonthEnd(){
-    return `${app.year}-${String(app.month+1).padStart(2,'0')}-29`;
+  function fmt(n) {
+    return n.toLocaleString("ru-RU");
   }
 
-  function contextEntityLabel(){ return app.trainingType === 'Индивидуальная' ? 'Тренер' : 'Группа'; }
-  function contextEntityValue(){ return app.trainingType === 'Индивидуальная' ? app.trainer : app.group; }
-  function fullContext(){ return `${app.discipline} • ${app.trainingType} • ${contextEntityValue()} • ${MONTHS[app.month]} ${app.year}`; }
-  function todayDate(){ return new Date(app.demoTodayIso + 'T00:00:00'); }
-  function dateIso(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
-  function isPastTrainingDate(dt){ return dateIso(dt) < app.demoTodayIso; }
-
-  function isLate(arrival, start){ return !!arrival && !!start && String(arrival) > String(start); }
-
-  function pkg(id, number, label, type, total, startDate, activeUntil, price, paid, discount, current=false, open=true, paidDate=null, payments=null){
-    const basePayments = payments || (paid > 0 ? [{amount: Number(paid||0), date: (paidDate || startDate), method:'Наличные'}] : []);
-    const totalPaid = basePayments.reduce((s,x)=>s+Number(x.amount||0),0);
-    return {id, number, label, type, total, startDate, activeUntil, price, paid: totalPaid, discount, current, open, progress:'0', discipline:app.discipline, paidDate: paidDate || startDate, payments: basePayments};
+  function shortDate(d) {
+    const dt = new Date(d);
+    return dt.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
   }
 
-  function createStudent(data){
-    const fullName = data.fullName || [data.lastName, data.firstName].filter(Boolean).join(' ').trim() || 'Новый ученик';
-    const lastName = data.lastName || (fullName.split(/\s+/)[0] || '');
-    const firstName = data.firstName || (fullName.split(/\s+/).slice(1).join(' ') || '');
-    const s = {
-      id: data.id || uid(),
-      lastName,
-      firstName,
-      fullName,
-      phone: data.phone || '',
-      dob: data.dob || '',
-      sex: data.sex || '—',
-      active: data.active !== false,
-      frozen: !!data.frozen,
-      extendDays: Number(data.extendDays || 0),
-      avatarMode: data.avatarMode || 'initials',
-      progressSlots: data.progressSlots || {},
-      seriesTrainings: Number(data.seriesTrainings || 0),
-      streak: Number(data.streak || 0),
-      packageHistory: clone(data.packageHistory || []),
-      mainPackageId: data.mainPackageId || null,
-      monthlyMembership: data.monthlyMembership || monthKey(),
-      hadTrial: !!data.hadTrial
-    };
-    if(!s.packageHistory.length){
-      const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-      s.packageHistory.push(p); s.mainPackageId = p.id;
-    }
-    if(!s.mainPackageId){
-      const candidate = s.packageHistory.find(p => p.current) || s.packageHistory[0];
-      s.mainPackageId = candidate ? candidate.id : null;
-    }
-    refreshStudentDerived(s);
-    return s;
+  function dayOfWeek(d) {
+    return new Date(d).toLocaleDateString("ru-RU", { weekday: "short" });
   }
 
-  function createSeedState(){
-    const s1 = createStudent({
-      id:'u1', fullName:'Иванов Иван', phone:'+7 989 123-45-67', dob:'2010-04-19', sex:'М',
-      seriesTrainings:12, streak:5,
-      packageHistory:[
-        pkg('p11',1,'Блок 12','block',12,'2025-05-01','2025-05-29',4000,4000,0,false,false),
-        pkg('p12',2,'Блок 12','block',12,'2025-06-03','2025-07-01',4000,4000,0,false,false),
-        pkg('p13',3,'Блок 8','block',8,'2025-08-01','2025-08-29',3000,3000,0,false,false),
-        pkg('p14',4,'Блок 8','block',8,'2025-09-02','2025-09-30',3000,3000,0,true,true)
-      ],
-      mainPackageId:'p14',
-      progressSlots:{
-        1:{packageId:'p14', start:'18:30', arrival:'18:24'},
-        4:{packageId:'p14', start:'18:30', arrival:'18:29'}
-      }
-    });
-    const s2 = createStudent({
-      id:'u2', fullName:'Фролова Анна', phone:'+7 989 222-33-44', dob:'2011-09-08', sex:'Ж',
-      seriesTrainings:19, streak:9,
-      packageHistory:[
-        pkg('p21',7,'Блок 12','block',12,'2025-07-01','2025-07-29',4000,4000,0,false,false),
-        pkg('p22',8,'Блок 12','block',12,'2025-08-01','2025-08-29',4000,4000,0,false,false),
-        pkg('p23',9,'Блок 12','block',12,'2025-09-01','2025-09-29',4000,0,0,true,true,'2025-09-08',[{amount:2500,date:'2025-09-01',method:'Наличные'},{amount:1000,date:'2025-09-08',method:'Безналичные'}]),
-        pkg('p24',10,'Бонус 2','bonus',2,'2025-09-10','2025-09-29',0,0,0,false,true)
-      ],
-      mainPackageId:'p23',
-      progressSlots:{
-        0:{packageId:'p23', start:'18:30', arrival:'18:27'},
-        1:{packageId:'p23', start:'18:30', arrival:'18:28'},
-        2:{packageId:'p23', start:'18:30', arrival:'18:30'},
-        3:{packageId:'p23', start:'18:30', arrival:'18:26'},
-        4:{packageId:'p23', start:'18:30', arrival:'18:29'},
-        5:{packageId:'p23', start:'18:30', arrival:'18:31'},
-        6:{packageId:'p24', start:'18:30', arrival:'18:28'},
-        7:{packageId:'p23', start:'18:30', arrival:'18:24'},
-        8:{packageId:'p23', start:'18:30', arrival:'18:27'}
-      }
-    });
-    const s3 = createStudent({
-      id:'u3', fullName:'Петров Пётр', phone:'+7 989 333-44-55', dob:'2013-01-12', sex:'М',
-      hadTrial:true, seriesTrainings:1, streak:1,
-      packageHistory:[pkg('p31',1,'Пробная','trial',1,'2025-09-03','2025-09-03',0,0,0,true,false)],
-      mainPackageId:'p31',
-      progressSlots:{2:{packageId:'p31', start:'18:30', arrival:'18:25'}}
-    });
-    const s4 = createStudent({
-      id:'u4', fullName:'Ксенофонтов Андрей', phone:'+7 989 444-55-66', dob:'2012-11-30', sex:'М',
-      frozen:true, seriesTrainings:8, streak:0,
-      packageHistory:[pkg('p41',12,'Блок 4','block',4,'2025-09-04','2025-10-02',2000,1000,0,true,true)],
-      mainPackageId:'p41',
-      progressSlots:{0:{packageId:'p41', start:'18:30', arrival:'18:30'},3:{packageId:'p41', start:'18:30', arrival:'18:31'}}
-    });
-    return { students: [s1,s2,s3,s4] };
+  function toast(msg, type) {
+    const tc = document.getElementById("toast-container");
+    const t = document.createElement("div");
+    t.className = "toast toast-" + (type || "info");
+    t.textContent = msg;
+    tc.appendChild(t);
+    setTimeout(() => t.classList.add("show"), 10);
+    setTimeout(() => {
+      t.classList.remove("show");
+      setTimeout(() => t.remove(), 300);
+    }, 2400);
   }
 
-  function monthState(){ const key = monthKey(); if(!app.store.has(key)) app.store.set(key, createSeedState()); return app.store.get(key); }
-  function students(){ return monthState().students; }
-  function activeStudents(){ return students().filter(s => s.active); }
-  function getStudent(id){ return students().find(s => s.id === id) || null; }
-  function ensureSelected(){
-    const cur=getStudent(app.selectedStudentId);
-    if(cur && cur.active) return cur;
-    const first=activeStudents()[0] || null;
-    app.selectedStudentId=first?first.id:null;
-    return first;
-  }
-  function currentStudent(){ return ensureSelected(); }
+  function showSheet(title, items, onSelect) {
+    const overlay = document.getElementById("sheet-overlay");
+    const panel = document.getElementById("sheet-panel");
+    panel.innerHTML = "";
 
-  function getPackageById(student, id){ return (student.packageHistory || []).find(p => p.id===id) || null; }
-  function slotsOfPackage(student, packageId){
-    return Object.keys(student.progressSlots || {}).map(Number).sort((a,b)=>a-b).filter(i => student.progressSlots[i] && student.progressSlots[i].packageId===packageId);
-  }
-  function pkgType(pkg){ return pkg ? pkg.type : 'block'; }
-  function openPackages(student){
-    return (student.packageHistory || []).filter(p => p.open);
-  }
-  function hasOpenMainBlock(student){
-    return openPackages(student).some(p => p.type==='block' && remainingForPackage(student,p) > 0);
-  }
-  function remainingForPackage(student, pkg){
-    if(!pkg) return 0;
-    const used = slotsOfPackage(student, pkg.id).length;
-    return Math.max(0, Number(pkg.total || 0) - used);
-  }
-  function hadTrial(student){
-    return !!student.hadTrial || (student.packageHistory || []).some(p => p.type==='trial');
-  }
-  function currentMainPackage(student){
-    return getPackageById(student, student.mainPackageId) || openPackages(student).find(p => p.current) || openPackages(student)[0] || (student.packageHistory || [])[0] || null;
-  }
-  function selectedProgressPackage(student){
-    const selectedId = app.selectedPackageByStudent[student.id];
-    let pkg = getPackageById(student, selectedId);
-    if(pkg && pkg.open && remainingForPackage(student, pkg) > 0) return pkg;
-    pkg = openPackages(student).find(p => remainingForPackage(student, p) > 0) || null;
-    app.selectedPackageByStudent[student.id] = pkg ? pkg.id : null;
-    return pkg;
-  }
-  function blockOrdinal(student, idx, pkg){
-    const arr = slotsOfPackage(student, pkg.id).filter(i => i <= idx);
-    return arr.length;
-  }
-  function singleOrdinal(student, idx){
-    const ids = Object.keys(student.progressSlots || {}).map(Number).sort((a,b)=>a-b);
-    return ids.filter(i => i<=idx && pkgType(getPackageById(student, student.progressSlots[i].packageId)) === 'single').length;
-  }
-  function bonusOrdinal(student, idx){
-    const ids = Object.keys(student.progressSlots || {}).map(Number).sort((a,b)=>a-b);
-    return ids.filter(i => i<=idx && pkgType(getPackageById(student, student.progressSlots[i].packageId)) === 'bonus').length;
-  }
+    const hdr = document.createElement("div");
+    hdr.className = "sheet-header";
+    hdr.innerHTML = '<span class="sheet-title">' + title + "</span>" +
+      '<span class="sheet-close">✕</span>';
+    panel.appendChild(hdr);
 
-  function progressTextForPackage(student, pkg){
-    if(!pkg) return '—';
-    const used = slotsOfPackage(student, pkg.id).length;
-    if(pkg.type==='trial') return `${used}/${pkg.total}`;
-    if(pkg.type==='single') return `${used}/${pkg.total}`;
-    if(pkg.type==='bonus') return `${used}/${pkg.total}`;
-    return `${used}/${pkg.total}`;
-  }
-
-  function computeDebt(pkg){
-    return Math.max(0, Number(pkg.price||0) - Number(pkg.discount||0) - Number(pkg.paid||0));
-  }
-  function packagePercent(pkg){
-    const total = Number(pkg?.total || 0);
-    const used = Number(pkg?.used || 0);
-    return total ? Math.round((used/total)*100) : 0;
-  }
-
-  function refreshStudentDerived(student){
-    (student.packageHistory || []).forEach(pkg => {
-      pkg.used = slotsOfPackage(student, pkg.id).length;
-      pkg.debt = computeDebt(pkg);
-      pkg.progress = progressTextForPackage(student, pkg);
-      if(pkg.used >= Number(pkg.total || 0)) pkg.open = false;
-    });
-    const main = currentMainPackage(student);
-    if(main) student.mainPackageId = main.id;
-    student.price = Number(main?.price || 0);
-    student.paid = Number(main?.paid || 0);
-    student.discount = Number(main?.discount || 0);
-    student.debt = Math.max(0, student.price - student.discount - student.paid);
-    student.packageNumber = Number(main?.number || 0);
-    student.packageLabel = main?.label || '—';
-    student.packageTotal = Number(main?.total || 0);
-    student.startDate = main?.startDate || '';
-    student.activeUntil = main?.activeUntil || '';
-    student.paidDate = main?.paidDate || main?.startDate || '';
-    student.progress = main ? progressTextForPackage(student, main) : '—';
-    if(student.seriesTrainings <= 0) student.seriesTrainings = Object.keys(student.progressSlots || {}).length;
-  }
-
-  function statusChip(student, compact=false){
-    refreshStudentDerived(student);
-    if(student.frozen) return {text: compact ? '❄' : 'Заморожен', cls:'frozen'};
-    if(student.debt>0) return {text:'Долг', cls:'debt'};
-    return {text:'Активен', cls:'ok'};
-  }
-
-  function datesMWF(y,m,count=12){
-    const d=new Date(y,m,1);
-    while(d.getDay()!==1){ d.setDate(d.getDate()+1); }
-    const out=[];
-    while(out.length<count){
-      if([1,3,5].includes(d.getDay())) out.push(new Date(d));
-      d.setDate(d.getDate()+1);
-    }
-    return out;
-  }
-  function getSlot(student, idx){ return student.progressSlots[idx] ? clone(student.progressSlots[idx]) : null; }
-  function setSlot(student, idx, slot){
-    if(!student.progressSlots) student.progressSlots={};
-    if(!slot) delete student.progressSlots[idx];
-    else student.progressSlots[idx]=slot;
-    refreshStudentDerived(student);
-  }
-
-  function slotVisual(student, idx){
-    const slot = getSlot(student, idx);
-    if(!slot) return {cls:'empty', main:'+', sub:''};
-    const pkg = getPackageById(student, slot.packageId);
-    if(!pkg) return {cls:'empty', main:'?', sub:''};
-    if(pkg.type==='block') return {cls:'block', main:`${blockOrdinal(student, idx, pkg)}/${pkg.total}`, sub:`Пакет № ${pkg.number} • ${pkg.label}`};
-    if(pkg.type==='trial') return {cls:'trial', main:'П', sub:`Пакет № ${pkg.number} • Пробная`};
-    if(pkg.type==='single') return {cls:'single', main:`${singleOrdinal(student, idx)}`, sub:`Пакет № ${pkg.number} • Разовая`};
-    if(pkg.type==='bonus') return {cls:'bonus', main:`БОН ${bonusOrdinal(student, idx)}`, sub:`Пакет № ${pkg.number} • ${pkg.label}`};
-    return {cls:'empty', main:'+', sub:''};
-  }
-
-  function renderHeaderActions(){
-    let html = '';
-    if(app.view === 'list'){
-      const addStudentBtn = bootstrap.permissions?.canAddStudentToGroup
-        ? `<div class="header-actions-bottom add-student-row"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
-        : '';
-      html = `<div class="header-actions-stack list-header-actions">
-        <div class="header-actions-top right-half compact-journal journal-row">
-          <button class="btn yellow small" id="headerJournalAction">Журнал событий</button>
-        </div>
-        ${addStudentBtn}
-      </div>`;
-    } else if(app.view === 'student' && currentStudent()){
-      html = `<div class="header-actions-top right-half single-secondary card-row">
-        <button class="btn purple small" id="headerCardAction">Карточка</button>
-      </div>`;
-    } else if(app.view === 'packages' && currentStudent()){
-      const addPkgBtn = bootstrap.permissions?.canAddPackage
-        ? `<div class="header-actions-top full package-add-row"><button class="btn green small" id="headerAddAction">Добавить пакет</button></div>`
-        : '';
-      html = addPkgBtn;
-    }
-    els.headerActions.dataset.view = app.view;
-    els.headerActions.innerHTML = html;
-    const addBtn = els.headerActions.querySelector('#headerAddAction');
-    const journalBtn = els.headerActions.querySelector('#headerJournalAction');
-    const cardBtn = els.headerActions.querySelector('#headerCardAction');
-    if(addBtn){
-      addBtn.onclick = () => {
-        if(app.view === 'list') openAddToGroupSheet();
-        else if(app.view === 'packages'){
-          const student = currentStudent();
-          if(student) openAddPackageSheet(student);
-        }
-      };
-    }
-    if(journalBtn) journalBtn.onclick = () => navigate('event-journal');
-    if(cardBtn) cardBtn.onclick = () => navigate('student-profile');
-  }
-
-  function render(){
-    const act = activeStudents().length;
-    els.headerSub.innerHTML = `${esc(fullContext())}<span class="subline">Ритм группы • ${app.groupRhythm.map(esc).join(' • ')}</span>`;
-    els.groupStatsBadge.textContent = `${act} / ${app.groupTotal} / ${app.groupLimit}`;
-    renderHeaderActions();
-    els.globalLockBtn.textContent = app.editUnlocked ? '🔓' : '🔒';
-    els.globalLockBtn.classList.toggle('unlocked', app.editUnlocked);
-    renderList(); renderStudent(); renderProgress(); renderPackages();
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view===app.view));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(`view-${app.view}`).classList.add('active');
-  }
-
-  function renderList(){
-    const rows = activeStudents().filter(s => !app.query || s.fullName.toLowerCase().includes(app.query.toLowerCase()));
-    const entityField = app.trainingType === 'Индивидуальная'
-      ? `<div class="field"><div class="field-label">Тренер</div><button class="ctx-btn" id="f-trainer"><span class="val">${esc(app.trainer)}</span><span class="chev">▾</span></button></div>`
-      : `<div class="field"><div class="field-label">Группа</div><button class="ctx-btn" id="f-group"><span class="val">${esc(app.group)}</span><span class="chev">▾</span></button></div>`;
-    els.list.innerHTML = `
-      <div class="card">
-        <div class="context-grid">
-          <div class="field"><div class="field-label">Дисциплина</div><button class="ctx-btn" id="f-discipline"><span class="val">${esc(app.discipline)}</span><span class="chev">▾</span></button></div>
-          <div class="field"><div class="field-label">Тип тренировки</div><button class="ctx-btn" id="f-type"><span class="val">${esc(app.trainingType)}</span><span class="chev">▾</span></button></div>
-          ${entityField}
-          <div class="field"><div class="field-label">Месяц</div><button class="ctx-btn" id="f-month"><span class="val">${MONTHS[app.month]}</span><span class="chev">▾</span></button></div>
-          <div class="field"><div class="field-label">Год</div><button class="ctx-btn" id="f-year"><span class="val">${app.year}</span><span class="chev">▾</span></button></div>
-          <div class="field search-field"><div class="field-label">Поиск ученика</div><input id="f-search" placeholder="Фамилия Имя" value="${esc(app.query)}" /></div>
-        </div>
-      </div>
-      <div class="list-wrap">${rows.map((student, idx) => listRowHtml(student, idx)).join('')}</div>
-    `;
-    bindList();
-  }
-
-  function listRowHtml(student, idx){
-    refreshStudentDerived(student);
-    const selected = student.id === app.selectedStudentId;
-    const frozenMark = student.frozen ? `<div class="chip frozen icon-chip" title="Заморожен">❄</div>` : '';
-    const activeInline = `<span class="status-inline ${student.active===false ? 'off' : 'ok'}">${student.active===false ? 'Не активен' : 'Активен'}</span>`;
-    const paidCls = student.debt>0 ? 'paid-partial' : 'paid-ok';
-    return `
-      <article class="row ${selected ? 'selected' : ''}" data-open-student="${student.id}">
-        <div class="avatar-wrap">
-          <div class="avatar">${esc(initials(student.fullName))}</div>
-          <div class="row-idx">${idx + 1}</div>
-        </div>
-        <div class="row-main">
-          <div class="fio">${esc(student.fullName)}</div>
-          <div class="row-statusline"><span class="dot">•</span>${activeInline}</div>
-          <div class="row-meta">
-            <span class="pkg-no">Пакет № ${student.packageNumber}</span>
-            <span class="dot">•</span>
-            <span>${esc(student.packageLabel)}</span>
-          </div>
-          <div class="row-kpis">
-            <div>Оплачено: <span class="${paidCls}">${money(student.paid)}</span></div>
-            <div>Долг: <span class="debt-val">${money(student.debt)}</span></div>
-            <div>Прогресс: <span class="prog-val">${esc(student.progress)}</span></div>
-          </div>
-        </div>
-        <div class="row-side">
-          <button class="btn tiny warn icon-only" title="Убрать из группы" aria-label="Убрать из группы" data-remove-from-group="${student.id}">➜</button>
-          ${frozenMark}
-        </div>
-      </article>
-    `;
-  }
-
-  function renderStudent(){
-    const student = currentStudent();
-    if(!student){ els.student.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
-    refreshStudentDerived(student);
-    const st = statusChip(student);
-    const payBtnLabel = student.debt > 0 && student.paid > 0 ? 'Внести доплату' : 'Внести оплату';
-    els.student.innerHTML = `
-      <div class="card hero">
-        <div class="hero-top">
-          <button class="hero-avatar" id="avatarBtn">${esc(initials(student.fullName))}</button>
-          <div>
-            <h2>${esc(student.fullName)}</h2>
-            <div class="mini-note">Пакет № ${student.packageNumber} • ${esc(student.packageLabel)}</div>
-            <div class="mini-note">Срок действия пакета • ${formatDate(student.startDate)} — ${formatDate(student.activeUntil)}</div>
-          </div>
-          <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="studentLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
-        </div>
-        <div class="compact-bar">
-          <div class="chip ${st.cls}">${st.text}</div>
-        </div>
-        <div class="facts">
-          <div class="fact"><div class="label">Дата начала пакета</div><div class="value">${formatDate(student.startDate)}</div></div>
-          <div class="fact"><div class="label">Активен по</div><div class="value">${formatDate(student.activeUntil)}</div></div>
-          <div class="fact cost"><div class="label">Стоимость</div><div class="value">${money(student.price)}</div></div>
-          <div class="fact"><div class="label">Скидка</div><div class="value">${money(student.discount)}</div></div>
-          <div class="fact ${student.paid>0 ? 'ok' : ''}"><div class="label">${paidLabel(student.paid, student.paidDate)}</div><div class="value">${money(student.paid)}</div></div>
-          <div class="fact ${student.debt>0 ? 'debt' : 'ok'}"><div class="label">Долг</div><div class="value">${money(student.debt)}</div></div>
-          <div class="fact"><div class="label">Прогресс</div><div class="value">${esc(student.progress)}</div></div>
-          <div class="fact"><div class="label">Подрядность</div><div class="value">${student.streak}</div></div>
-          <div class="fact"><div class="label">Серия</div><div class="value">${student.seriesTrainings}</div></div>
-          <div class="fact"><div class="label">Продление</div><div class="value">+${student.extendDays || 0}</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="actions">
-          <button class="btn small blue" id="btnFreeze">${student.frozen ? 'Снять заморозку' : 'Заморозить'}</button>
-          <button class="btn small green" id="btnExtend">Продлить пакет +7</button>
-          <button class="btn small warn" id="btnPayStudent">${payBtnLabel}</button>
-          <button class="btn small danger" id="btnRemoveFromStudent">Убрать из группы</button>
-        </div>
-      </div>
-    `;
-    bindStudent();
-  }
-
-  function renderProgress(){
-    const student = currentStudent();
-    if(!student){ els.progress.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
-    refreshStudentDerived(student);
-    const days = datesMWF(app.year, app.month, app.trainingDateLimit);
-    const activePkgs = openPackages(student).filter(p => remainingForPackage(student, p) > 0);
-    const selected = selectedProgressPackage(student);
-    const used = selected ? slotsOfPackage(student, selected.id).length : 0;
-    const total = Number(selected?.total || 0);
-    const percent = total ? Math.round((used/total)*100) : 0;
-    els.progress.innerHTML = `
-      <div class="card">
-        <div class="progress-head">
-          <div class="compact-bar">
-            <div class="chip">${esc(student.fullName)}</div>
-            <div class="chip">${selected ? `Пакет № ${selected.number}` : `Пакет № ${student.packageNumber}`}</div>
-          </div>
-          <button class="lock-btn ${app.editUnlocked ? 'unlocked' : ''}" id="progressLockBtn">${app.editUnlocked ? '🔓' : '🔒'}</button>
-        </div>
-        <div class="package-selector">
-          ${activePkgs.map(p => `<button class="pkg-pill ${selected && selected.id===p.id ? 'active' : ''}" data-select-pkg="${p.id}">Пакет № ${p.number} • ${esc(p.label)} • ${remainingForPackage(student,p)}</button>`).join('')}
-          ${!activePkgs.length ? `<div class="chip">Нет активных пакетов</div>` : ''}
-        </div>
-        <div class="progress-meter">
-          <div class="progress-meter-head">
-            <div class="progress-meter-title">Посещаемость пакета</div>
-            <div class="chip">${percent}%</div>
-          </div>
-          ${selected ? progressMarkers(student, selected) : ''}
-        </div>
-        <div class="compact-bar"><div class="chip">Ритм группы • ${app.groupRhythm.join(' • ')}</div></div>
-        <div class="month-strip" id="progressStrip"><div class="days">${days.map((d,i)=>dayCard(student,d,i)).join('')}</div></div>
-      </div>
-    `;
-    bindProgress();
-  }
-
-  function dayCard(student, date, idx){
-    const v = slotVisual(student, idx);
-    const slot = getSlot(student, idx);
-    const missed = !slot && isPastTrainingDate(date);
-    const cls = slot ? v.cls : (missed ? 'missed' : 'empty');
-    const lateMark = slot && isLate(slot.arrival, slot.start);
-    const main = slot ? v.main : (missed ? '●' : '+');
-    const sub = slot ? v.sub : (missed ? 'Пропуск' : '');
-    return `
-      <article class="day-card">
-        <div>
-          <div class="day-date ${lateMark ? 'lateMark' : ''}">${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}</div>
-          <div class="day-dow">${WEEK[date.getDay()]}</div>
-        </div>
-        <button class="slot ${cls}" data-slot-idx="${idx}">
-          <div class="mainMark">${main}</div>
-          ${sub ? `<div class="slotSub">${sub}</div>` : ''}
-        </button>
-        <div class="time-meta">
-          <div>Старт: ${slot?.start || '18:30'}</div>
-          <div class="${slot && isLate(slot.arrival, slot.start) ? 'late' : ''}">Приход: ${slot?.arrival || '—'}${slot && isLate(slot.arrival, slot.start) ? ' 🔥' : ''}</div>
-        </div>
-      </article>
-    `;
-  }
-
-  function renderPackages(){
-    const student = currentStudent();
-    if(!student){ els.packages.innerHTML = `<div class="card">Сначала выберите ученика</div>`; return; }
-    refreshStudentDerived(student);
-    const history = (student.packageHistory || []).slice().sort((a,b)=>a.number-b.number);
-    els.packages.innerHTML = `
-      </div>
-      <div class="package-list">
-        ${history.map(pkgCardHtml).join('')}
-      </div>
-    `;
-    bindPackages();
-  }
-
-  function pkgCardHtml(pkg){
-    const student = currentStudent();
-    const debt = computeDebt(pkg);
-    return `
-      <article class="package-card" data-open-pkg="${pkg.id}">
-        <div class="package-top">
-          <div>
-            <div class="pkg-title">Пакет № ${pkg.number} • ${esc(pkg.label)}</div>
-            <div class="mini-note">${esc(pkg.discipline || app.discipline)} • ${formatDate(pkg.startDate)} — ${formatDate(pkg.activeUntil)}</div>
-          </div>
-          ${pkg.open ? '<div class="chip ok">Активный</div>' : '<div class="chip">Закрыт</div>'}
-        </div>
-        <div class="progress-meter">
-          <div class="progress-meter-head">
-            <div class="progress-meter-title">Прогресс пакета</div>
-            <div class="chip">${packagePercent(pkg)}%</div>
-          </div>
-          ${student ? progressMarkers(student, pkg) : ''}
-        </div>
-        <div class="pkg-meta">
-          <div class="chip">Прогресс ${esc(pkg.progress || '0')}</div>
-          <div class="chip">Стоимость ${money(pkg.price)}</div>
-          <div class="chip ${debt>0 ? 'debt' : 'ok'}">Долг ${money(debt)}</div>
-          <div class="chip">Оплачено ${money(pkg.paid)}${Number(pkg.paid||0)>0 && pkg.paidDate ? ' • ' + formatDate(pkg.paidDate) : ''}</div>
-          <div class="chip">Скидка ${money(pkg.discount)}</div>
-        </div>
-      </article>
-    `;
-  }
-
-  function bindList(){
-    els.list.querySelector('#f-discipline').onclick = () => openContextChoice('Дисциплина','discipline',['Кикбоксинг','Бокс']);
-    els.list.querySelector('#f-type').onclick = () => openContextChoice('Тип тренировки','type',['Групповая','Индивидуальная']);
-    const entity = app.trainingType === 'Индивидуальная' ? 'trainer' : 'group';
-    els.list.querySelector(`#f-${entity}`).onclick = () => openContextChoice(app.trainingType === 'Индивидуальная' ? 'Тренер' : 'Группа', entity, app.trainingType === 'Индивидуальная' ? app.trainersCatalog : app.groupsCatalog);
-    els.list.querySelector('#f-month').onclick = () => openContextChoice('Месяц','month', MONTHS.map((m,i)=>({label:m,value:i})));
-    els.list.querySelector('#f-year').onclick = () => openContextChoice('Год','year', [2024,2025,2026,2027].map(y=>({label:String(y),value:y})));
-    els.list.querySelector('#f-search').addEventListener('input', applyFilters);
-    els.list.querySelectorAll('[data-open-student]').forEach(row => row.onclick = (e) => {
-      if(e.target.closest('button')) return;
-      app.selectedStudentId = e.currentTarget.dataset.openStudent;
-      const selected = getStudent(app.selectedStudentId);
-      setSelectedStudent(app.selectedStudentId, selected?.fullName || '');
-      app.view = 'student';
-      scrollTop();
-      render();
-    });
-    els.list.querySelectorAll('[data-remove-from-group]').forEach(btn => btn.onclick = (e) => {
-      e.stopPropagation();
-      if(!requireUnlocked()) return;
-      const student = getStudent(e.currentTarget.dataset.removeFromGroup);
-      if(!student) return;
-      confirmAction('Убрать ученика из группы?', () => {
-        student.active = false;
-        addToGroupPool(student);
-        if(app.selectedStudentId === student.id) app.selectedStudentId = activeStudents()[0]?.id || null;
-        closeSheet(); render(); showToast('Ученик убран из группы');
-      });
-    });
-  }
-
-  function bindStudent(){
-    const student=currentStudent(); if(!student) return;
-    els.student.querySelector('#studentLockBtn').onclick = toggleLock;
-    els.student.querySelector('#avatarBtn').onclick = openAvatarSheet;
-    els.student.querySelector('#btnFreeze').onclick = () => {
-      if(!requireUnlocked()) return;
-      student.frozen = !student.frozen;
-      render(); showToast(student.frozen ? 'Пакет заморожен' : 'Заморозка снята');
-    };
-    els.student.querySelector('#btnExtend').onclick = () => {
-      if(!requireUnlocked()) return;
-      student.extendDays = Number(student.extendDays||0) + 7;
-      const main = currentMainPackage(student);
-      if(main){
-        main.activeUntil = addDays(main.activeUntil, 7);
-        student.activeUntil = main.activeUntil;
-      }
-      render(); showToast('Продление пакета: +7 дней');
-    };
-    els.student.querySelector('#btnPayStudent').onclick = () => {
-      if(!requireUnlocked()) return;
-      openPaymentSheet(student);
-    };
-    els.student.querySelector('#btnRemoveFromStudent').onclick = () => {
-      if(!requireUnlocked()) return;
-      confirmAction('Убрать ученика из группы?', () => {
-        student.active = false;
-        addToGroupPool(student);
+    const list = document.createElement("div");
+    list.className = "sheet-list";
+    items.forEach(function (item) {
+      const row = document.createElement("div");
+      row.className = "sheet-item";
+      if (item.selected) row.classList.add("selected");
+      row.textContent = item.label;
+      row.addEventListener("click", function () {
+        onSelect(item);
         closeSheet();
-        app.view = 'list';
-        app.selectedStudentId = activeStudents()[0]?.id || null;
-        scrollTop();
-        render();
-        showToast('Ученик убран из группы');
       });
-    };
+      list.appendChild(row);
+    });
+    panel.appendChild(list);
+
+    overlay.classList.remove("hidden");
+    panel.classList.remove("hidden");
+
+    function closeSheet() {
+      overlay.classList.add("hidden");
+      panel.classList.add("hidden");
+    }
+
+    overlay.onclick = closeSheet;
+    hdr.querySelector(".sheet-close").onclick = closeSheet;
   }
 
-  function bindProgress(){
-    const student=currentStudent(); if(!student) return;
-    els.progress.querySelector('#progressLockBtn').onclick = toggleLock;
-    els.progress.querySelectorAll('[data-select-pkg]').forEach(btn => btn.onclick = () => {
-      app.selectedPackageByStudent[student.id] = btn.dataset.selectPkg;
-      render();
-    });
-    const strip = els.progress.querySelector('#progressStrip');
-    if(strip){
-      strip.scrollLeft = app.progressScrollByStudent[student.id] || 0;
-      strip.addEventListener('scroll', () => { app.progressScrollByStudent[student.id] = strip.scrollLeft; });
+  // ─── RENDER ENTRY ───
+  function render(container) {
+    _container = container;
+    _view = "roster";
+    _selectedStudentId = null;
+
+    // Telegram back button
+    if (window.Telegram && Telegram.WebApp.BackButton) {
+      Telegram.WebApp.BackButton.hide();
     }
-    els.progress.querySelectorAll('[data-slot-idx]').forEach(btn => {
-      const idx = Number(btn.dataset.slotIdx);
-      let sx=0, sy=0, moved=false, pointerId=null, lastTap=0;
-      btn.addEventListener('pointerdown', (e) => {
-        pointerId = e.pointerId;
-        sx = e.clientX; sy = e.clientY; moved = false;
+
+    _renderFull();
+  }
+
+  function _renderFull() {
+    _container.innerHTML = "";
+
+    if (_view === "roster") {
+      _renderHeader();
+      _renderFilters();
+      _renderStudentList();
+    } else if (_view === "student") {
+      _renderStudentDetail();
+    } else if (_view === "progress") {
+      _renderProgress();
+    } else if (_view === "packages") {
+      _renderPackages();
+    }
+  }
+
+  // ─── HEADER ───
+  function _renderHeader() {
+    const state = AppState.get();
+    const group = state.group;
+    const disc = state.discipline;
+    const students = state.students || [];
+    const activeCount = students.filter(s => s.status === "active").length;
+    const totalCount = students.length;
+    const limit = group ? group.limit : 0;
+    const monthStr = MONTHS[state.month] + " " + state.year;
+    const rhythm = group ? group.rhythm : "—";
+    const typeLabel = state.trainingType === "group" ? "Групповая" : "Индивидуальная";
+
+    const hdr = document.createElement("div");
+    hdr.className = "kuto-header";
+
+    hdr.innerHTML =
+      '<div class="kuto-header-top">' +
+        '<div class="kuto-header-left">' +
+          '<div class="kuto-title">KUTO</div>' +
+          '<div class="kuto-ctx">' +
+            '<div class="kuto-ctx-line ctx-discipline">' + (disc ? disc.name : "—") + "</div>" +
+            '<div class="kuto-ctx-line ctx-type">' + typeLabel + "</div>" +
+            '<div class="kuto-ctx-line ctx-group">' + (group ? group.name : "—") + "</div>" +
+            '<div class="kuto-ctx-line ctx-month">' + monthStr + "</div>" +
+            '<div class="kuto-ctx-line ctx-rhythm">Ритм группы: ' + rhythm + "</div>" +
+          "</div>" +
+        "</div>" +
+        '<div class="kuto-header-right">' +
+          '<div class="kuto-quota-row">' +
+            '<span class="quota-active">' + activeCount + "</span>" +
+            '<span class="quota-sep"> / </span>' +
+            '<span class="quota-total">' + totalCount + "</span>" +
+            '<span class="quota-sep"> / </span>' +
+            '<span class="quota-limit">' + limit + "</span>" +
+            '<button class="kuto-lock-btn" id="lock-btn">' +
+              (state.editLocked ? "🔒" : "🔓") +
+            "</button>" +
+          "</div>" +
+          (AppState.can("canOpenJournal")
+            ? '<button class="kuto-journal-btn" id="journal-btn">📋 Журнал событий</button>'
+            : "") +
+        "</div>" +
+      "</div>";
+
+    _container.appendChild(hdr);
+
+    // Зелёная кнопка "Добавить ученика"
+    if (AppState.can("canAddStudentToGroup")) {
+      const addBar = document.createElement("button");
+      addBar.className = "kuto-add-student-bar";
+      addBar.textContent = "+ Добавить ученика в группу";
+      addBar.addEventListener("click", _onAddStudent);
+      _container.appendChild(addBar);
+    }
+
+    // Listeners
+    const lockBtn = document.getElementById("lock-btn");
+    if (lockBtn) {
+      lockBtn.addEventListener("click", function () {
+        AppState.set("editLocked", !AppState.get("editLocked"));
+        _renderFull();
       });
-      btn.addEventListener('pointermove', (e) => {
-        if(pointerId !== e.pointerId) return;
-        if(Math.abs(e.clientX - sx) > 14 || Math.abs(e.clientY - sy) > 14) moved = true;
+    }
+    const jBtn = document.getElementById("journal-btn");
+    if (jBtn) {
+      jBtn.addEventListener("click", function () {
+        Router.navigate("event-journal", { groupId: state.group ? state.group.id : null });
       });
-      const finish = (e) => {
-        if(pointerId !== e.pointerId) return;
-        pointerId = null;
-        if(moved) return;
-        const now = Date.now();
-        if(now - lastTap < 320){
-          lastTap = 0;
-          app.progressScrollByStudent[student.id] = strip ? strip.scrollLeft : (app.progressScrollByStudent[student.id] || 0);
-          handleProgressToggle(student, idx);
+    }
+  }
+
+  // ─── FILTERS ───
+  function _renderFilters() {
+    const state = AppState.get();
+    const wrap = document.createElement("div");
+    wrap.className = "kuto-filters";
+
+    // Discipline picker
+    wrap.appendChild(_makeFilterBtn("filter-disc", "Дисциплина", state.discipline ? state.discipline.name : "—", function () {
+      showSheet("Дисциплина", state.disciplines.map(d => ({
+        label: d.name, value: d, selected: state.discipline && state.discipline.id === d.id,
+      })), async function (item) {
+        AppState.set("discipline", item.value);
+        const groups = await Api.getGroups(item.value.id);
+        AppState.set({ groups: groups, group: groups[0] || null });
+        if (groups[0]) {
+          const students = await Api.getStudents(groups[0].id);
+          AppState.set("students", students);
         } else {
-          lastTap = now;
-          setTimeout(() => { if(lastTap === now) lastTap = 0; }, 340);
+          AppState.set("students", []);
         }
-      };
-      btn.addEventListener('pointerup', finish);
-      btn.addEventListener('pointercancel', () => { pointerId = null; moved = false; });
-      btn.addEventListener('pointerleave', () => { if(pointerId!==null){ moved = true; } });
-      btn.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+        _renderFull();
+      });
+    }));
+
+    // Training type
+    wrap.appendChild(_makeFilterBtn("filter-type", "Тип тренировки", state.trainingType === "group" ? "Групповая" : "Индивидуальная", function () {
+      showSheet("Тип тренировки", [
+        { label: "Групповая", value: "group", selected: state.trainingType === "group" },
+        { label: "Индивидуальная", value: "individual", selected: state.trainingType === "individual" },
+      ], function (item) {
+        AppState.set("trainingType", item.value);
+        _renderFull();
+      });
+    }));
+
+    // Group / Trainer
+    if (state.trainingType === "group") {
+      wrap.appendChild(_makeFilterBtn("filter-group", "Группа", state.group ? state.group.name : "—", function () {
+        showSheet("Группа", state.groups.map(g => ({
+          label: g.name, value: g, selected: state.group && state.group.id === g.id,
+        })), async function (item) {
+          AppState.set("group", item.value);
+          const students = await Api.getStudents(item.value.id);
+          AppState.set("students", students);
+          _renderFull();
+        });
+      }));
+    } else {
+      wrap.appendChild(_makeFilterBtn("filter-trainer", "Тренер", state.trainer ? state.trainer.name : "—", function () {
+        showSheet("Тренер", state.trainers.map(t => ({
+          label: t.name, value: t, selected: state.trainer && state.trainer.id === t.id,
+        })), function (item) {
+          AppState.set("trainer", item.value);
+          _renderFull();
+        });
+      }));
+    }
+
+    // Month
+    wrap.appendChild(_makeFilterBtn("filter-month", "Месяц", MONTHS[state.month], function () {
+      showSheet("Месяц", MONTHS.map((m, i) => ({
+        label: m, value: i, selected: state.month === i,
+      })), function (item) {
+        AppState.set("month", item.value);
+        _renderFull();
+      });
+    }));
+
+    // Year
+    const curYear = new Date().getFullYear();
+    const years = [curYear - 1, curYear, curYear + 1];
+    wrap.appendChild(_makeFilterBtn("filter-year", "Год", String(state.year), function () {
+      showSheet("Год", years.map(y => ({
+        label: String(y), value: y, selected: state.year === y,
+      })), function (item) {
+        AppState.set("year", item.value);
+        _renderFull();
+      });
+    }));
+
+    // Search
+    const searchWrap = document.createElement("div");
+    searchWrap.className = "kuto-search-wrap";
+    searchWrap.innerHTML = '<input type="text" class="kuto-search" placeholder="Поиск ученика…" value="' +
+      (state.searchQuery || "") + '">';
+    wrap.appendChild(searchWrap);
+
+    _container.appendChild(wrap);
+
+    // Search listener
+    const input = wrap.querySelector(".kuto-search");
+    let searchTimer = null;
+    input.addEventListener("input", function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        AppState.set("searchQuery", input.value.trim());
+        _renderStudentListOnly();
+      }, 250);
     });
   }
 
-  function handleProgressToggle(student, idx){
-    const date = datesMWF(app.year, app.month, app.trainingDateLimit)[idx];
-    const slot = getSlot(student, idx);
-    const dtIso = dateIso(date);
-    if(dtIso > app.demoTodayIso){
-      showToast('Дата ещё не наступила');
+  function _makeFilterBtn(id, label, value, onClick) {
+    const btn = document.createElement("button");
+    btn.className = "kuto-filter-btn";
+    btn.id = id;
+    btn.innerHTML = '<span class="filter-label">' + label + '</span><span class="filter-value">' + value + ' ▾</span>';
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
+  // ─── STUDENT LIST ───
+  function _renderStudentList() {
+    const listWrap = document.createElement("div");
+    listWrap.className = "kuto-student-list";
+    listWrap.id = "student-list";
+    _container.appendChild(listWrap);
+    _renderStudentListOnly();
+  }
+
+  function _renderStudentListOnly() {
+    const listWrap = document.getElementById("student-list");
+    if (!listWrap) return;
+    listWrap.innerHTML = "";
+
+    const state = AppState.get();
+    let students = (state.students || []).filter(s => s.status === "active");
+    const q = (state.searchQuery || "").toLowerCase();
+    if (q) {
+      students = students.filter(s =>
+        (s.lastName + " " + s.firstName).toLowerCase().includes(q) ||
+        (s.firstName + " " + s.lastName).toLowerCase().includes(q)
+      );
+    }
+
+    if (students.length === 0) {
+      listWrap.innerHTML = '<div class="kuto-empty">Нет учеников в текущем составе</div>';
       return;
     }
-    if(!requireUnlocked()) return;
-    if(slot){
-      setSlot(student, idx, null);
-      render();
-      showToast(isPastTrainingDate(date) ? 'Тренировка снята • снова пропуск' : 'Тренировка снята');
-      return;
-    }
-    const pkg = selectedProgressPackage(student);
-    if(!pkg){ showToast('Сначала выберите активный пакет'); return; }
-    if(remainingForPackage(student, pkg) <= 0){ showToast('Пакет исчерпан'); return; }
-    setSlot(student, idx, {packageId: pkg.id, start:'18:30', arrival:''});
-    render();
-    showToast('Тренировка отмечена');
-  }
 
-  function bindPackages(){
-    const student=currentStudent(); if(!student) return;
-    els.packages.querySelectorAll('[data-open-pkg]').forEach(card => card.onclick = () => openPackageDetails(student, card.dataset.openPkg));
-  }
+    students.forEach(function (st, idx) {
+      const card = document.createElement("div");
+      card.className = "student-card";
+      card.dataset.sid = st.id;
 
-  function applyFilters(){
-    const search = els.list.querySelector('#f-search');
-    app.query = search ? search.value.trim() : app.query;
-    monthState(); ensureSelected(); render();
-  }
+      const paidClass = st.debt === 0 ? "val-green" : (st.paid > 0 ? "val-yellow" : "val-red");
+      const debtClass = st.debt > 0 ? "val-red" : "val-green";
+      const initials = (st.firstName[0] || "") + (st.lastName[0] || "");
 
+      card.innerHTML =
+        '<div class="sc-left">' +
+          '<div class="sc-avatar" style="background:' + (st.avatarColor || "#666") + '">' +
+            '<span class="sc-initials">' + initials + "</span>" +
+          "</div>" +
+          '<div class="sc-num">' + (idx + 1) + "</div>" +
+        "</div>" +
+        '<div class="sc-center">' +
+          '<div class="sc-name">' + st.lastName + " " + st.firstName + "</div>" +
+          '<div class="sc-status status-active">Активен</div>' +
+          '<div class="sc-package">Пакет №' + st.packageNum + " • Блок " + st.block + "</div>" +
+          '<div class="sc-kpi">' +
+            '<span class="kpi-item ' + paidClass + '">Оплачено ' + fmt(st.paid) + "</span>" +
+            '<span class="kpi-sep">•</span>' +
+            '<span class="kpi-item ' + debtClass + '">Долг ' + fmt(st.debt) + "</span>" +
+            '<span class="kpi-sep">•</span>' +
+            '<span class="kpi-item val-green">Прогресс ' + st.progress + "%</span>" +
+          "</div>" +
+        "</div>" +
+        '<div class="sc-right">' +
+          (AppState.can("canRemoveStudentFromGroup")
+            ? '<button class="sc-remove-btn" data-sid="' + st.id + '" title="Убрать из группы">↗</button>'
+            : "") +
+          (st.frozen
+            ? '<button class="sc-freeze-btn" data-sid="' + st.id + '" title="Заморожен">❄</button>'
+            : "") +
+        "</div>";
 
-  function openContextChoice(title, key, options){
-    setSheet(`
-      <div class="sheet-head">
-        <div><div class="sheet-title">${title}</div><div class="sheet-sub">Выберите значение</div></div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="sheet-group" id="ctxChoiceBody"></div>
-    `);
-    const body = els.sheet.querySelector('#ctxChoiceBody');
-    (options||[]).forEach(opt => {
-      const value = typeof opt === 'object' ? opt.value : opt;
-      const label = typeof opt === 'object' ? opt.label : opt;
-      const btn = document.createElement('button');
-      btn.className = 'choice';
-      btn.innerHTML = `<div class="name">${esc(label)}</div>${String(getContextValue(key))===String(value) ? '<div class="chip ok">Выбрано</div>' : ''}`;
-      btn.onclick = () => {
-        setContextValue(key, value);
-        closeSheet();
-        render();
-      };
-      body.appendChild(btn);
+      // Клик по карточке → экран ученика
+      card.addEventListener("click", function (e) {
+        if (e.target.closest(".sc-remove-btn") || e.target.closest(".sc-freeze-btn")) return;
+        if (AppState.can("canOpenStudentProfile") || AppState.get("role") === "student") {
+          _selectedStudentId = st.id;
+          _view = "student";
+          _showBackButton();
+          _renderFull();
+        }
+      });
+
+      listWrap.appendChild(card);
+    });
+
+    // Remove buttons
+    listWrap.querySelectorAll(".sc-remove-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const sid = btn.dataset.sid;
+        const st = students.find(s => s.id === sid);
+        if (st && confirm("Убрать " + st.lastName + " " + st.firstName + " из группы?")) {
+          Api.removeFromGroup(sid, AppState.get("group")?.id).then(function () {
+            const updated = AppState.get("students").filter(s => s.id !== sid || s.status === "active");
+            // Refresh
+            Api.getStudents(AppState.get("group")?.id).then(function (sts) {
+              AppState.set("students", sts);
+              _renderStudentListOnly();
+            });
+          });
+        }
+      });
+    });
+
+    // Freeze buttons
+    listWrap.querySelectorAll(".sc-freeze-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        toast("Пакет заморожен", "info");
+      });
     });
   }
 
-  function getContextValue(key){
-    if(key==='month') return app.month;
-    if(key==='year') return app.year;
-    if(key==='type') return app.trainingType;
-    if(key==='group') return app.group;
-    if(key==='trainer') return app.trainer;
-    if(key==='discipline') return app.discipline;
-    return '';
-  }
+  // ─── STUDENT DETAIL ───
+  function _renderStudentDetail() {
+    const st = AppState.get("students").find(s => s.id === _selectedStudentId);
+    if (!st) { _view = "roster"; _renderFull(); return; }
 
-  function setContextValue(key, value){
-    if(key==='month') app.month = Number(value);
-    else if(key==='year') app.year = Number(value);
-    else if(key==='type'){
-      app.trainingType = value;
-      if(value === 'Индивидуальная' && !app.trainer) app.trainer = app.trainersCatalog[0] || 'Тренер 1';
-      if(value === 'Групповая' && !app.group) app.group = app.groupsCatalog[0] || 'Группа A';
-    } else if(key==='group') app.group = value;
-    else if(key==='trainer') app.trainer = value;
-    else if(key==='discipline') app.discipline = value;
-    monthState();
-    ensureSelected();
-  }
+    const wrap = document.createElement("div");
+    wrap.className = "kuto-student-detail";
 
-  function toggleLock(){
-    app.editUnlocked = !app.editUnlocked;
-    render();
-  }
+    const initials = (st.firstName[0] || "") + (st.lastName[0] || "");
 
-  function addToGroupPool(student){
-    const exists = app.groupPool.some(x => x.fullName===student.fullName && x.phone===student.phone && x.dob===student.dob);
-    if(!exists){
-      app.groupPool.unshift({id:'gp_'+uid(), fullName:student.fullName, phone:student.phone, dob:student.dob, sex:student.sex});
+    // Sub-tabs
+    const tabs = document.createElement("div");
+    tabs.className = "sd-tabs";
+
+    const tabItems = [
+      { key: "student", label: "Ученик" },
+      { key: "progress", label: "Прогресс" },
+      { key: "packages", label: "Пакеты" },
+    ];
+
+    tabItems.forEach(function (t) {
+      const tb = document.createElement("button");
+      tb.className = "sd-tab" + (_view === t.key ? " active" : "");
+      tb.textContent = t.label;
+      tb.addEventListener("click", function () {
+        _view = t.key;
+        _renderFull();
+      });
+      tabs.appendChild(tb);
+    });
+
+    // Back + Card buttons row
+    const topBar = document.createElement("div");
+    topBar.className = "sd-topbar";
+    topBar.innerHTML =
+      '<button class="sd-back-btn">← Состав</button>' +
+      '<button class="sd-card-btn">Карточка →</button>';
+    wrap.appendChild(topBar);
+    wrap.appendChild(tabs);
+
+    // Student info
+    const info = document.createElement("div");
+    info.className = "sd-info";
+
+    const paidClass = st.debt === 0 ? "val-green" : (st.paid > 0 ? "val-yellow" : "val-red");
+    const costLabel = fmt(st.cost);
+
+    info.innerHTML =
+      '<div class="sd-avatar" style="background:' + (st.avatarColor || "#666") + '">' +
+        '<span class="sd-initials">' + initials + "</span>" +
+      "</div>" +
+      '<div class="sd-main-info">' +
+        '<div class="sd-name">' + st.lastName + " " + st.firstName + "</div>" +
+        '<div class="sd-row"><span class="sd-label">Пакет №</span><span class="sd-val">' + st.packageNum + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Блок</span><span class="sd-val">' + st.block + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Дата начала</span><span class="sd-val">' + shortDate(st.activeSince) + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Активен по</span><span class="sd-val">' + shortDate(st.activeUntil) + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Стоимость</span><span class="sd-val val-yellow">' + costLabel + "</span></div>" +
+        (st.discount > 0 ? '<div class="sd-row"><span class="sd-label">Скидка</span><span class="sd-val val-green">' + fmt(st.discount) + "</span></div>" : "") +
+        '<div class="sd-row"><span class="sd-label">Оплачено</span><span class="sd-val ' + paidClass + '">' + fmt(st.paid) + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Долг</span><span class="sd-val ' + (st.debt > 0 ? "val-red" : "val-green") + '">' + fmt(st.debt) + "</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Прогресс</span><span class="sd-val val-green">' + st.progress + "%</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Подрядность</span><span class="sd-val">' + (st.consistency || 0) + "%</span></div>" +
+        '<div class="sd-row"><span class="sd-label">Серия</span><span class="sd-val">' + (st.streak || 0) + "</span></div>" +
+      "</div>";
+
+    wrap.appendChild(info);
+
+    // Action buttons
+    const actions = document.createElement("div");
+    actions.className = "sd-actions";
+
+    if (AppState.can("canFreezePackage")) {
+      const freezeBtn = document.createElement("button");
+      freezeBtn.className = "sd-action-btn btn-freeze";
+      freezeBtn.textContent = st.frozen ? "Разморозить" : "Заморозить";
+      freezeBtn.addEventListener("click", function () {
+        Api.freezePackage(st.id).then(function (res) {
+          st.frozen = res.frozen;
+          toast(res.frozen ? "Пакет заморожен" : "Пакет разморожен", "info");
+          _renderFull();
+        });
+      });
+      actions.appendChild(freezeBtn);
     }
+
+    if (AppState.can("canExtendPackage")) {
+      const extBtn = document.createElement("button");
+      extBtn.className = "sd-action-btn btn-extend";
+      extBtn.textContent = "Продлить пакет +7";
+      extBtn.addEventListener("click", function () {
+        Api.extendPackage(st.id, 7).then(function () {
+          toast("Пакет продлён на 7 дней", "success");
+        });
+      });
+      actions.appendChild(extBtn);
+    }
+
+    if (AppState.can("canMakePayment")) {
+      const payBtn = document.createElement("button");
+      payBtn.className = "sd-action-btn btn-pay";
+      payBtn.textContent = st.debt > 0 ? "Внести доплату" : "Внести оплату";
+      payBtn.addEventListener("click", function () {
+        toast("Окно оплаты (интеграция)", "info");
+      });
+      actions.appendChild(payBtn);
+    }
+
+    if (AppState.can("canRemoveStudentFromGroup")) {
+      const rmBtn = document.createElement("button");
+      rmBtn.className = "sd-action-btn btn-remove";
+      rmBtn.textContent = "Убрать из группы";
+      rmBtn.addEventListener("click", function () {
+        if (confirm("Убрать " + st.lastName + " " + st.firstName + " из группы?")) {
+          Api.removeFromGroup(st.id, AppState.get("group")?.id).then(function () {
+            toast("Ученик убран из группы", "info");
+            _view = "roster";
+            Api.getStudents(AppState.get("group")?.id).then(function (sts) {
+              AppState.set("students", sts);
+              _renderFull();
+            });
+          });
+        }
+      });
+      actions.appendChild(rmBtn);
+    }
+
+    wrap.appendChild(actions);
+    _container.appendChild(wrap);
+
+    // Event listeners
+    wrap.querySelector(".sd-back-btn").addEventListener("click", function () {
+      _view = "roster";
+      _hideBackButton();
+      _renderFull();
+    });
+    wrap.querySelector(".sd-card-btn").addEventListener("click", function () {
+      Router.navigate("student-profile", { studentId: st.id });
+    });
   }
 
-  function openAddToGroupSheet(mode='create'){
-    setSheet(`
-      <div class="sheet-head">
-        <div><div class="sheet-title">Добавить ученика в группу</div></div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="segment">
-        <button class="btn small ${mode==='create'?'active':''}" data-add-mode="create">Новый</button>
-        <button class="btn small ${mode==='pool'?'active':''}" data-add-mode="pool">Из списка</button>
-        <button class="btn small ${mode==='group'?'active':''}" data-add-mode="group">Из группы</button>
-        <button class="btn small ${mode==='extra'?'active':''}" data-add-mode="extra">В другую группу</button>
-      </div>
-      <div id="addModeBody"></div>
-    `);
-    els.sheet.querySelectorAll('[data-add-mode]').forEach(btn => btn.onclick = () => openAddToGroupSheet(btn.dataset.addMode));
-    renderAddMode(mode);
-  }
+  // ─── PROGRESS ───
+  function _renderProgress() {
+    const st = AppState.get("students").find(s => s.id === _selectedStudentId);
+    if (!st) { _view = "roster"; _renderFull(); return; }
 
-  function renderAddMode(mode){
-    const body = els.sheet.querySelector('#addModeBody'); if(!body) return;
-    if(mode==='create'){
-      body.innerHTML = `
-        <div class="sheet-group">
-          <div class="context-grid">
-            <label class="field"><span>Фамилия</span><input id="new-lastname" placeholder="Иванов" /></label>
-            <label class="field"><span>Имя</span><input id="new-firstname" placeholder="Иван" /></label>
-          </div>
-          <div class="context-grid">
-            <label class="field"><span>Телефон</span><input id="new-phone" placeholder="+7 ..." /></label>
-            <label class="field"><span>Дата рождения</span><input id="new-dob" type="date" /></label>
-            <label class="field"><span>Пол</span><input type="hidden" id="new-sex" value="М" /><div class="seg" id="new-sex-seg"><button type="button" class="seg-btn active" data-sex="М">М</button><button type="button" class="seg-btn" data-sex="Ж">Ж</button></div></label>
-          </div>
-          <button class="btn green" id="save-new-student">Добавить в группу</button>
-        </div>`;
-      const sexSeg = body.querySelector('#new-sex-seg');
-      if(sexSeg){
-        sexSeg.querySelectorAll('[data-sex]').forEach(btn => btn.onclick = () => {
-          body.querySelector('#new-sex').value = btn.dataset.sex;
-          sexSeg.querySelectorAll('[data-sex]').forEach(x => x.classList.toggle('active', x===btn));
+    const wrap = document.createElement("div");
+    wrap.className = "kuto-progress";
+
+    // Top bar
+    const topBar = document.createElement("div");
+    topBar.className = "sd-topbar";
+    topBar.innerHTML = '<button class="sd-back-btn">← Состав</button>';
+    wrap.appendChild(topBar);
+
+    // Tabs
+    const tabs = document.createElement("div");
+    tabs.className = "sd-tabs";
+    [
+      { key: "student", label: "Ученик" },
+      { key: "progress", label: "Прогресс" },
+      { key: "packages", label: "Пакеты" },
+    ].forEach(function (t) {
+      const tb = document.createElement("button");
+      tb.className = "sd-tab" + (_view === t.key ? " active" : "");
+      tb.textContent = t.label;
+      tb.addEventListener("click", function () {
+        _view = t.key;
+        _renderFull();
+      });
+      tabs.appendChild(tb);
+    });
+    wrap.appendChild(tabs);
+
+    // Header
+    const hdr = document.createElement("div");
+    hdr.className = "prog-header";
+    hdr.innerHTML =
+      '<div class="prog-name">' + st.lastName + " " + st.firstName + "</div>" +
+      '<div class="prog-pkg">' + st.packageType + " • Пакет №" + st.packageNum + "</div>" +
+      '<div class="prog-pct">' + st.progress + "%</div>";
+    wrap.appendChild(hdr);
+
+    // Dot progress bar
+    const dotBar = document.createElement("div");
+    dotBar.className = "prog-dots";
+    st.trainings.forEach(function (tr) {
+      const dot = document.createElement("span");
+      dot.className = "prog-dot";
+      if (tr.done && tr.late) dot.classList.add("dot-late");
+      else if (tr.done) dot.classList.add("dot-done");
+      else dot.classList.add("dot-empty");
+      dotBar.appendChild(dot);
+    });
+    wrap.appendChild(dotBar);
+
+    // Date carousel
+    const carousel = document.createElement("div");
+    carousel.className = "prog-carousel";
+    st.trainings.forEach(function (tr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const trDate = new Date(tr.date);
+      const isFuture = trDate > today;
+
+      const slot = document.createElement("div");
+      slot.className = "prog-slot";
+      if (tr.done && tr.late) slot.classList.add("slot-late");
+      else if (tr.done) slot.classList.add("slot-done");
+      else if (isFuture) slot.classList.add("slot-future");
+      else slot.classList.add("slot-missed");
+
+      slot.innerHTML =
+        '<div class="slot-day">' + dayOfWeek(tr.date) + "</div>" +
+        '<div class="slot-date">' + new Date(tr.date).getDate() + "</div>" +
+        '<div class="slot-month">' + shortDate(tr.date).split(" ")[1] + "</div>" +
+        (tr.done && tr.late ? '<div class="slot-late-icon">🔥</div>' : "") +
+        (tr.done && !tr.late ? '<div class="slot-check">✓</div>' : "");
+
+      // Double tap
+      if (AppState.can("canMarkTraining")) {
+        slot.addEventListener("click", function () {
+          const now = Date.now();
+          if (_lastTapDate === tr.date && now - _lastTapTime < 400) {
+            // double tap
+            if (isFuture) {
+              toast("Дата ещё не наступила", "warn");
+            } else {
+              const newDone = !tr.done;
+              Api.markTraining(st.id, tr.date, newDone).then(function (res) {
+                if (res.ok) {
+                  tr.done = newDone;
+                  st.progress = res.progress;
+                  _renderFull();
+                  toast(newDone ? "Тренировка отмечена" : "Отметка снята", "success");
+                } else if (res.error === "future_date") {
+                  toast("Дата ещё не наступила", "warn");
+                }
+              });
+            }
+            _lastTapTime = 0;
+            _lastTapDate = null;
+          } else {
+            _lastTapTime = now;
+            _lastTapDate = tr.date;
+          }
         });
       }
-      body.querySelector('#save-new-student').onclick = () => {
-        if(!requireUnlocked()) return;
-        const lastName = body.querySelector('#new-lastname').value.trim();
-        const firstName = body.querySelector('#new-firstname').value.trim();
-        const phone = body.querySelector('#new-phone').value.trim();
-        const dob = body.querySelector('#new-dob').value.trim();
-        const sex = body.querySelector('#new-sex').value;
-        if(!lastName || !firstName){ showToast('Введите фамилию и имя'); return; }
-        const fullName = `${lastName} ${firstName}`.trim();
-        const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({lastName, firstName, fullName, phone, dob, sex, packageHistory:[p], mainPackageId:p.id});
-        students().push(student);
-        app.selectedStudentId = student.id;
-        closeSheet(); render(); showToast('Ученик добавлен');
-      };
-      return;
-    }
 
-    if(mode==='pool'){
-      const filtered = app.studentPool
-        .filter(p => app.poolLetter==='Все' || firstLetter(p.fullName)===app.poolLetter)
-        .filter(p => !app.poolQuery || p.fullName.toLowerCase().includes(app.poolQuery.toLowerCase()) || String(p.phone).includes(app.poolQuery));
-      body.innerHTML = `
-        <div class="sheet-group">
-          <input id="pool-search" placeholder="Поиск по ФИО или телефону" value="${esc(app.poolQuery)}" />
-          <div class="alpha">${LETTERS.map(l => `<button class="btn tiny ${app.poolLetter===l?'blue':''}" data-letter="${l}">${l}</button>`).join('')}</div>
-          <div class="sheet-group">${filtered.map(p => choiceHtmlPool(p)).join('')}</div>
-        </div>`;
-      body.querySelector('#pool-search').addEventListener('input', (e) => { app.poolQuery=e.target.value.trim(); renderAddMode('pool'); });
-      body.querySelectorAll('[data-letter]').forEach(btn => btn.onclick = () => { app.poolLetter=btn.dataset.letter; renderAddMode('pool'); });
-      body.querySelectorAll('[data-add-pool]').forEach(btn => btn.onclick = () => {
-        if(!requireUnlocked()) return;
-        const src=app.studentPool.find(x=>x.id===btn.dataset.addPool); if(!src) return;
-        const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({lastName:(src.fullName||'').split(/\s+/)[0]||'', firstName:(src.fullName||'').split(/\s+/).slice(1).join(' '), fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
-        students().push(student); app.selectedStudentId = student.id;
-        closeSheet(); render(); showToast('Ученик добавлен');
-      });
-      return;
-    }
+      carousel.appendChild(slot);
+    });
+    wrap.appendChild(carousel);
 
-    if(mode==='group'){
-      body.innerHTML = `<div class="sheet-group">${app.groupPool.map(p => choiceHtmlGroup(p)).join('')}</div>`;
-      body.querySelectorAll('[data-add-group]').forEach(btn => btn.onclick = () => {
-        if(!requireUnlocked()) return;
-        const src=app.groupPool.find(x=>x.id===btn.dataset.addGroup); if(!src) return;
-        const p = pkg('pkg_'+uid(), 1, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-        const student = createStudent({lastName:(src.fullName||'').split(/\s+/)[0]||'', firstName:(src.fullName||'').split(/\s+/).slice(1).join(' '), fullName:src.fullName, phone:src.phone, dob:src.dob, sex:src.sex, packageHistory:[p], mainPackageId:p.id});
-        students().push(student); app.selectedStudentId = student.id;
-        closeSheet(); render(); showToast('Ученик добавлен из группы');
-      });
-      return;
-    }
+    _container.appendChild(wrap);
 
-    const chosenStudent = currentStudent() || activeStudents()[0] || null;
-    body.innerHTML = `
-      <div class="sheet-group">
-        ${chosenStudent ? `<div class="choice"><div><div class="name">${esc(chosenStudent.fullName)}</div><div class="meta">Добавление в другую группу</div></div></div>` : `<div class="choice"><div><div class="name">Сначала выберите ученика</div><div class="meta">Откройте ученика из состава, потом вернитесь сюда</div></div></div>`}
-        ${app.groupsCatalog.filter(g => g!==app.group).map(g => `
-          <div class="choice">
-            <div>
-              <div class="name">${esc(g)}</div>
-              <div class="meta">Добавить в группу</div>
-            </div>
-            <button class="btn small" data-move-group="${esc(g)}">Выбрать</button>
-          </div>
-        `).join('')}
-      </div>`;
-    body.querySelectorAll('[data-move-group]').forEach(btn => btn.onclick = () => {
-      const chosenStudent = currentStudent() || activeStudents()[0] || null;
-      if(!chosenStudent){ showToast('Сначала выберите ученика'); return; }
-      confirmAction(`Добавить «${chosenStudent.fullName}» в группу «${btn.dataset.moveGroup}»?`, () => {
-        closeSheet();
-        setSheet(`
-          <div class="sheet-head">
-            <div><div class="sheet-title">Готово</div><div class="sheet-sub">${esc(chosenStudent.fullName)} добавлен в ${esc(btn.dataset.moveGroup)}</div></div>
-            <button class="close" data-close-sheet>×</button>
-          </div>
-          <div class="sheet-group">
-            <button class="btn" id="stayHere">Остаться здесь</button>
-            <button class="btn blue" id="goThere">Перейти в группу</button>
-          </div>
-        `);
-        els.sheet.querySelector('#stayHere').onclick = closeSheet;
-        els.sheet.querySelector('#goThere').onclick = () => {
-          app.group = btn.dataset.moveGroup;
-          closeSheet();
-          render();
-          showToast('Группа переключена');
-        };
-      });
+    // Back
+    wrap.querySelector(".sd-back-btn").addEventListener("click", function () {
+      _view = "roster";
+      _hideBackButton();
+      _renderFull();
     });
   }
 
-  function choiceHtmlPool(person){
-    return `<div class="choice">
-      <div>
-        <div class="name">${esc(person.fullName)}</div>
-        <div class="meta">${esc(person.phone || '—')} • ${formatDate(person.dob)} • ${esc(person.sex || '—')}</div>
-      </div>
-      <button class="btn small" data-add-pool="${person.id}">Добавить</button>
-    </div>`;
-  }
-  function choiceHtmlGroup(person){
-    return `<div class="choice">
-      <div>
-        <div class="name">${esc(person.fullName)}</div>
-        <div class="meta">${esc(person.phone || '—')} • ${formatDate(person.dob)} • ${esc(person.sex || '—')}</div>
-      </div>
-      <button class="btn small" data-add-group="${person.id}">Добавить</button>
-    </div>`;
-  }
+  // ─── PACKAGES ───
+  function _renderPackages() {
+    const st = AppState.get("students").find(s => s.id === _selectedStudentId);
+    if (!st) { _view = "roster"; _renderFull(); return; }
 
-  function openAvatarSheet(){
-    setSheet(`
-      <div class="sheet-head"><div><div class="sheet-title">Аватарка</div></div><button class="close" data-close-sheet>×</button></div>
-      <div class="sheet-group">
-        <button class="btn" id="avatarCamera">Сфотографировать</button>
-        <button class="btn" id="avatarGallery">Из галереи</button>
-      </div>`);
-    els.sheet.querySelector('#avatarCamera').onclick = () => { closeSheet(); showToast('Камера — proto'); };
-    els.sheet.querySelector('#avatarGallery').onclick = () => { closeSheet(); showToast('Галерея — proto'); };
-  }
+    const wrap = document.createElement("div");
+    wrap.className = "kuto-packages";
 
-  function openPaymentSheet(student){
-    const main = currentMainPackage(student);
-    const debt = Math.max(0, Number(main?.price||0) - Number(main?.discount||0) - Number(main?.paid||0));
-    const title = debt > 0 && Number(main?.paid||0) > 0 ? 'Внести доплату' : 'Внести оплату';
-    setSheet(`
-      <div class="sheet-head">
-        <div><div class="sheet-title">${title}</div><div class="sheet-sub">${esc(student.fullName)} • долг ${debt}</div></div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="sheet-group">
-        ${debt>0 ? `<button class="btn warn" id="pay-full-debt">Закрыть долг полностью</button>` : ''}
-        <label class="field"><span>Сумма</span><input id="manual-pay" inputmode="numeric" placeholder="Введите сумму" /></label>
-        <label class="field"><span>Форма оплаты</span><input type="hidden" id="pay-method" value="Наличные" /><div class="seg" id="pay-method-seg"><button type="button" class="seg-btn active" data-method="Наличные">Наличные</button><button type="button" class="seg-btn" data-method="Безналичные">Безналичные</button></div></label>
-        <button class="btn blue" id="pay-manual">Сохранить</button>
-      </div>`);
-    const methodSeg = els.sheet.querySelector('#pay-method-seg');
-    if(methodSeg){
-      methodSeg.querySelectorAll('[data-method]').forEach(btn => btn.onclick = () => {
-        els.sheet.querySelector('#pay-method').value = btn.dataset.method;
-        methodSeg.querySelectorAll('[data-method]').forEach(x => x.classList.toggle('active', x===btn));
+    // Top bar
+    const topBar = document.createElement("div");
+    topBar.className = "sd-topbar";
+    topBar.innerHTML =
+      '<button class="sd-back-btn">← Состав</button>' +
+      (AppState.can("canAddPackage") ? '<button class="sd-add-pkg-btn">+ Добавить пакет</button>' : "");
+    wrap.appendChild(topBar);
+
+    // Tabs
+    const tabs = document.createElement("div");
+    tabs.className = "sd-tabs";
+    [
+      { key: "student", label: "Ученик" },
+      { key: "progress", label: "Прогресс" },
+      { key: "packages", label: "Пакеты" },
+    ].forEach(function (t) {
+      const tb = document.createElement("button");
+      tb.className = "sd-tab" + (_view === t.key ? " active" : "");
+      tb.textContent = t.label;
+      tb.addEventListener("click", function () {
+        _view = t.key;
+        _renderFull();
+      });
+      tabs.appendChild(tb);
+    });
+    wrap.appendChild(tabs);
+
+    // Package card (mock: один пакет = данные ученика)
+    const pkCard = document.createElement("div");
+    pkCard.className = "pkg-card";
+
+    const paidLabel = st.paid === st.cost ? "Оплата" : (st.paid > 0 ? "Частичная оплата" : "");
+    const paymentDate = st.payments.length > 0 ? shortDate(st.payments[0].date) : "";
+
+    pkCard.innerHTML =
+      '<div class="pkg-header-row">' +
+        '<span class="pkg-title">Пакет №' + st.packageNum + "</span>" +
+        '<span class="pkg-type">' + st.packageType + "</span>" +
+      "</div>" +
+      '<div class="pkg-meta">' +
+        (AppState.get("discipline") ? '<div class="pkg-line">Дисциплина: ' + AppState.get("discipline").name + "</div>" : "") +
+        '<div class="pkg-line">Период: ' + shortDate(st.activeSince) + " — " + shortDate(st.activeUntil) + "</div>" +
+        '<div class="pkg-line val-green">Прогресс: ' + st.progress + "%</div>" +
+        '<div class="pkg-line val-yellow">Стоимость: ' + fmt(st.cost) + "</div>" +
+        (st.discount > 0 ? '<div class="pkg-line val-green">Скидка: ' + fmt(st.discount) + "</div>" : "") +
+        '<div class="pkg-line ' + (st.paid > 0 ? "val-green" : "") + '">Оплачено: ' + fmt(st.paid) +
+          (st.paid > 0 && paymentDate ? " (" + paymentDate + ")" : "") + "</div>" +
+        '<div class="pkg-line ' + (st.debt > 0 ? "val-red" : "val-green") + '">Долг: ' + fmt(st.debt) + "</div>" +
+      "</div>";
+
+    // Dot progress
+    const dots = document.createElement("div");
+    dots.className = "prog-dots pkg-dots";
+    st.trainings.forEach(function (tr) {
+      const d = document.createElement("span");
+      d.className = "prog-dot";
+      if (tr.done && tr.late) d.classList.add("dot-late");
+      else if (tr.done) d.classList.add("dot-done");
+      else d.classList.add("dot-empty");
+      dots.appendChild(d);
+    });
+    pkCard.appendChild(dots);
+
+    // Payments history
+    if (st.payments.length > 0) {
+      const payHdr = document.createElement("div");
+      payHdr.className = "pkg-pay-title";
+      payHdr.textContent = "История оплат";
+      pkCard.appendChild(payHdr);
+
+      st.payments.forEach(function (p) {
+        const pRow = document.createElement("div");
+        pRow.className = "pkg-pay-row";
+        pRow.innerHTML =
+          '<span class="pkg-pay-type">' + p.type + "</span>" +
+          '<span class="pkg-pay-amount">' + fmt(p.amount) + "</span>" +
+          '<span class="pkg-pay-date">' + shortDate(p.date) + "</span>" +
+          '<span class="pkg-pay-method">' + (p.method === "nalichnaya" ? "Наличная" : "Безналичная") + "</span>";
+        pkCard.appendChild(pRow);
       });
     }
-    if(debt>0) els.sheet.querySelector('#pay-full-debt').onclick = () => applyPayment(student, debt, els.sheet.querySelector('#pay-method').value);
-    els.sheet.querySelector('#pay-manual').onclick = () => applyPayment(student, Number(els.sheet.querySelector('#manual-pay').value||0), els.sheet.querySelector('#pay-method').value);
+
+    wrap.appendChild(pkCard);
+    _container.appendChild(wrap);
+
+    // Listeners
+    wrap.querySelector(".sd-back-btn").addEventListener("click", function () {
+      _view = "roster";
+      _hideBackButton();
+      _renderFull();
+    });
+    const addPkg = wrap.querySelector(".sd-add-pkg-btn");
+    if (addPkg) {
+      addPkg.addEventListener("click", function () {
+        toast("Добавление пакета (интеграция)", "info");
+      });
+    }
   }
 
-  function applyPayment(student, amount, method='Наличные'){
-    amount = Number(amount||0); if(amount<=0){ showToast('Сумма должна быть больше 0'); return; }
-    const main = currentMainPackage(student); if(!main){ showToast('Нет активного пакета'); return; }
-    if(!main.payments) main.payments = [];
-    main.payments.push({amount, date: app.demoTodayIso, method});
-    main.paid = Number(main.paid||0) + amount;
-    main.paidDate = app.demoTodayIso;
-    refreshStudentDerived(student);
-    closeSheet(); render(); showToast(`Оплата: ${amount}`);
-  }
-
-  function openAddPackageSheet(student){
-    const canTrial = !hadTrial(student);
-    setSheet(`
-      <div class="sheet-head">
-        <div><div class="sheet-title">Добавить пакет</div></div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="sheet-group">
-        <div class="context-grid">
-          <button class="btn" data-package-add="block4">Блок 4</button>
-          <button class="btn" data-package-add="block8">Блок 8</button>
-          <button class="btn" data-package-add="block12">Блок 12</button>
-          <button class="btn ${canTrial ? '' : 'ghost'}" data-package-add="trial" ${canTrial ? '' : 'disabled'}>Пробная</button>
-          <button class="btn" data-package-add="single1">Разовая</button>
-          <button class="btn" data-package-add="bonus1">Бонус 1</button>
-          <button class="btn" data-package-add="bonus2">Бонус 2</button>
-          <button class="btn" data-package-add="bonus4">Бонус 4</button>
-        </div>
-      </div>
-    `);
-    els.sheet.querySelectorAll('[data-package-add]').forEach(btn => btn.onclick = () => {
-      if(!requireUnlocked()) return;
-      addPackageToStudent(student, btn.dataset.packageAdd);
+  // ─── ADD STUDENT MODAL ───
+  function _onAddStudent() {
+    showSheet("Добавить ученика", [
+      { label: "Новый", value: "new" },
+      { label: "Из списка", value: "list" },
+      { label: "Из группы", value: "from_group" },
+      { label: "В другую группу", value: "to_group" },
+    ], function (item) {
+      if (item.value === "new") {
+        _showNewStudentForm();
+      } else {
+        toast(item.label + " — режим (интеграция)", "info");
+      }
     });
   }
 
-  function nextPackageNumber(student){
-    return ((student.packageHistory || []).reduce((m,p) => Math.max(m, Number(p.number||0)), 0)) + 1;
+  function _showNewStudentForm() {
+    const overlay = document.getElementById("sheet-overlay");
+    const panel = document.getElementById("sheet-panel");
+    panel.innerHTML = "";
+
+    const hdr = document.createElement("div");
+    hdr.className = "sheet-header";
+    hdr.innerHTML = '<span class="sheet-title">Новый ученик</span><span class="sheet-close">✕</span>';
+    panel.appendChild(hdr);
+
+    const form = document.createElement("div");
+    form.className = "sheet-form";
+    form.innerHTML =
+      '<div class="sf-field"><label>Фамилия</label><input type="text" id="sf-last" placeholder="Фамилия"></div>' +
+      '<div class="sf-field"><label>Имя</label><input type="text" id="sf-first" placeholder="Имя"></div>' +
+      '<div class="sf-field"><label>Телефон</label><input type="tel" id="sf-phone" placeholder="+7 ..."></div>' +
+      '<div class="sf-field"><label>Дата рождения</label><input type="date" id="sf-bday"></div>' +
+      '<div class="sf-field"><label>Пол</label>' +
+        '<div class="sf-gender-seg">' +
+          '<button class="sf-seg active" data-g="М">М</button>' +
+          '<button class="sf-seg" data-g="Ж">Ж</button>' +
+        '</div>' +
+      '</div>' +
+      '<button class="sf-submit">Добавить</button>';
+    panel.appendChild(form);
+
+    overlay.classList.remove("hidden");
+    panel.classList.remove("hidden");
+
+    // Gender toggle
+    form.querySelectorAll(".sf-seg").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        form.querySelectorAll(".sf-seg").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    // Submit
+    form.querySelector(".sf-submit").addEventListener("click", function () {
+      toast("Ученик добавлен (mock)", "success");
+      overlay.classList.add("hidden");
+      panel.classList.add("hidden");
+    });
+
+    hdr.querySelector(".sheet-close").addEventListener("click", function () {
+      overlay.classList.add("hidden");
+      panel.classList.add("hidden");
+    });
+    overlay.onclick = function () {
+      overlay.classList.add("hidden");
+      panel.classList.add("hidden");
+    };
   }
 
-  function addPackageToStudent(student, kind){
-    const hasOpenBlock = openPackages(student).some(p => p.type==='block' && remainingForPackage(student,p) > 0);
-    if(kind.startsWith('block') && hasOpenBlock){ showToast('Сначала закройте текущий блок'); return; }
-    if(kind==='trial' && hadTrial(student)){ showToast('Пробная уже была'); return; }
-    if(kind==='single1' && hasOpenBlock){ showToast('Разовая доступна после закрытия блока'); return; }
-
-    let p = null;
-    const num = nextPackageNumber(student);
-    if(kind==='block4') p = pkg('pkg_'+uid(), num, 'Блок 4', 'block', 4, currentMonthStart(), currentMonthEnd(), 2000, 0, 0, true, true);
-    if(kind==='block8') p = pkg('pkg_'+uid(), num, 'Блок 8', 'block', 8, currentMonthStart(), currentMonthEnd(), 3000, 0, 0, true, true);
-    if(kind==='block12') p = pkg('pkg_'+uid(), num, 'Блок 12', 'block', 12, currentMonthStart(), currentMonthEnd(), 4000, 0, 0, true, true);
-    if(kind==='trial'){ p = pkg('pkg_'+uid(), num, 'Пробная', 'trial', 1, currentMonthStart(), currentMonthStart(), 0, 0, 0, false, true); student.hadTrial = true; }
-    if(kind==='single1') p = pkg('pkg_'+uid(), num, 'Разовая', 'single', 1, currentMonthStart(), currentMonthEnd(), 600, 0, 0, false, true);
-    if(kind==='bonus1') p = pkg('pkg_'+uid(), num, 'Бонус 1', 'bonus', 1, currentMonthStart(), currentMonthEnd(), 0, 0, 0, false, true);
-    if(kind==='bonus2') p = pkg('pkg_'+uid(), num, 'Бонус 2', 'bonus', 2, currentMonthStart(), currentMonthEnd(), 0, 0, 0, false, true);
-    if(kind==='bonus4') p = pkg('pkg_'+uid(), num, 'Бонус 4', 'bonus', 4, currentMonthStart(), currentMonthEnd(), 0, 0, 0, false, true);
-    if(!p) return;
-
-    student.packageHistory.push(p);
-    if(p.type==='block' || p.type==='trial') student.mainPackageId = p.id;
-    app.selectedPackageByStudent[student.id] = p.id;
-    refreshStudentDerived(student);
-    closeSheet();
-    render();
-    showToast('Пакет добавлен');
-  }
-
-  function openSlotSheet(student, idx){ return; }
-
-  function openPackageDetails(student, packageId){
-    const pkg = getPackageById(student, packageId);
-    if(!pkg) return;
-    const slots = slotsOfPackage(student, pkg.id).map(i => ({idx:i, slot:getSlot(student, i)}));
-    const debt = computeDebt(pkg);
-    setSheet(`
-      <div class="sheet-head">
-        <div>
-          <div class="sheet-title">Пакет № ${pkg.number} • ${esc(pkg.label)}</div>
-          <div class="sheet-sub">${esc(pkg.discipline || app.discipline)} • ${formatDate(pkg.startDate)} — ${formatDate(pkg.activeUntil)}</div>
-        </div>
-        <button class="close" data-close-sheet>×</button>
-      </div>
-      <div class="progress-meter">
-        <div class="progress-meter-head">
-          <div class="progress-meter-title">Прогресс пакета</div>
-          <div class="chip">${packagePercent(pkg)}%</div>
-        </div>
-  
-      </div>
-      <div class="sheet-group">
-        <div class="choice"><div><div class="name">Стоимость</div></div><div>${money(pkg.price)}</div></div>
-        <div class="choice"><div><div class="name">Оплачено</div>${Number(pkg.paid||0)>0 && pkg.paidDate ? `<div class="meta">${formatDate(pkg.paidDate)}</div>` : ``}</div><div>${money(pkg.paid)}</div></div>
-        <div class="choice"><div><div class="name">Скидка</div></div><div>${money(pkg.discount)}</div></div>
-        <div class="choice"><div><div class="name">Долг</div></div><div>${money(debt)}</div></div>
-        <div class="choice"><div><div class="name">Продление</div></div><div>+${student.extendDays || 0}</div></div>
-        <div class="choice"><div><div class="name">Заморозка</div></div><div>${student.frozen ? 'Да' : 'Нет'}</div></div>
-      </div>
-      <div class="sheet-group">
-        ${(pkg.payments && pkg.payments.length) ? pkg.payments.map((pay, i) => `
-          <div class="choice">
-            <div>
-              <div class="name">${paymentTitle(pkg.payments, i)} ${money(pay.amount)}</div>
-              <div class="meta">${formatDate(pay.date)} • ${esc(pay.method || '—')}</div>
-            </div>
-            <div>${money(pay.amount)}</div>
-          </div>
-        `).join('') : ''}
-      </div>
-      <div class="sheet-group">
-        ${slots.length ? slots.map(({idx,slot}) => `
-          <div class="choice">
-            <div>
-              <div class="name">${String(datesMWF(app.year, app.month, app.trainingDateLimit)[idx].getDate()).padStart(2,'0')}.${String(datesMWF(app.year, app.month, app.trainingDateLimit)[idx].getMonth()+1).padStart(2,'0')}</div>
-              <div class="meta">Старт ${esc(slot?.start || '18:30')} • <span class="${slot && isLate(slot.arrival, slot.start) ? 'late' : ''}">Приход ${esc(slot?.arrival || '—')}${slot && isLate(slot.arrival, slot.start) ? ' 🔥' : ''}</span></div>
-            </div>
-            <div>${esc(slotVisual(student, idx).main)}</div>
-          </div>
-        `).join('') : `<div class="choice"><div><div class="name">Нет тренировок</div></div></div>`}
-      </div>
-    `);
-  }
-
-  function confirmAction(message, onConfirm){
-    setSheet(`
-      <div class="sheet-head"><div><div class="sheet-title">Подтверждение</div><div class="sheet-sub">${esc(message)}</div></div><button class="close" data-close-sheet>×</button></div>
-      <div class="sheet-group"><button class="btn danger" id="confirmYes">Да</button><button class="btn ghost" id="confirmNo">Отмена</button></div>`);
-    els.sheet.querySelector('#confirmYes').onclick = onConfirm;
-    els.sheet.querySelector('#confirmNo').onclick = closeSheet;
-  }
-
-  function setSheet(html){
-    els.sheet.innerHTML = html;
-    els.sheetBackdrop.classList.add('show');
-    els.sheet.querySelectorAll('[data-close-sheet]').forEach(btn => btn.onclick = closeSheet);
-  }
-  function closeSheet(){
-    els.sheetBackdrop.classList.remove('show');
-    els.sheet.innerHTML = '';
-  }
-  els.sheetBackdrop.addEventListener('click', (e) => { if(e.target === els.sheetBackdrop) closeSheet(); });
-
-  function showToast(text){
-    els.toast.textContent = text;
-    els.toast.classList.add('show');
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => els.toast.classList.remove('show'), 1800);
-  }
-
-  function setView(target){
-    if((target==='student'||target==='progress'||target==='packages') && !currentStudent()){
-      showToast('Сначала выберите ученика');
-      return;
+  // ─── TG BACK BUTTON helpers ───
+  function _showBackButton() {
+    if (window.Telegram && Telegram.WebApp.BackButton) {
+      Telegram.WebApp.BackButton.show();
     }
-    app.view = target;
-    if(target==='student' || target==='progress' || target==='packages'){
-      const selected = currentStudent();
-      if(selected) setSelectedStudent(selected.id, selected.fullName || '');
+  }
+  function _hideBackButton() {
+    if (window.Telegram && Telegram.WebApp.BackButton) {
+      Telegram.WebApp.BackButton.hide();
     }
-    scrollTop();
-    render();
   }
 
-  document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => setView(btn.dataset.view));
-  els.globalLockBtn.onclick = toggleLock;
-
-  monthState(); render();
+  return { render: render };
 })();
-
-}

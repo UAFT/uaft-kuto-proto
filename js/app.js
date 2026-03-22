@@ -1,36 +1,56 @@
-import { bootstrapApi } from './api.js';
-import { getInitialRoute } from './router.js';
-import { setBootstrap, appState } from './state.js';
-import { initKutoScreen } from './screens/kuto.js';
-import { renderStudentProfilePlaceholder } from './screens/student-profile.js';
-import { renderStudentPackagesPlaceholder } from './screens/student-packages.js';
-import { renderEventJournalPlaceholder } from './screens/event-journal.js';
+// js/app.js — UAFT KUTO Bootstrap
 
-let bootCache = null;
-
-function renderCurrentRoute() {
-  appState.route = getInitialRoute();
-  if (appState.route === 'student-profile') {
-    renderStudentProfilePlaceholder();
-    return;
+(async function () {
+  // Telegram WebApp init
+  if (window.Telegram && window.Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    const tgId = Telegram.WebApp.initDataUnsafe?.user?.id || null;
+    AppState.set("tgId", tgId);
   }
-  if (appState.route === 'student-packages') {
-    renderStudentPackagesPlaceholder();
-    return;
-  }
-  if (appState.route === 'event-journal') {
-    renderEventJournalPlaceholder();
-    return;
-  }
-  initKutoScreen({ bootstrap: bootCache || appState.boot });
-}
 
-async function start() {
-  const boot = await bootstrapApi();
-  bootCache = boot;
-  setBootstrap(boot);
-  renderCurrentRoute();
-  window.addEventListener('hashchange', renderCurrentRoute);
-}
+  // Загрузка роли (mock)
+  const tgId = AppState.get("tgId");
+  const roleData = await Api.getRole(tgId);
+  AppState.setRole(roleData.role);
 
-start();
+  // Загрузка справочников
+  const disciplines = await Api.getDisciplines();
+  const trainers = await Api.getTrainers();
+  AppState.set({
+    disciplines: disciplines,
+    trainers: trainers,
+    discipline: disciplines[0] || null,
+  });
+
+  // Загрузка групп для первой дисциплины
+  if (disciplines[0]) {
+    const groups = await Api.getGroups(disciplines[0].id);
+    AppState.set({ groups: groups, group: groups[0] || null });
+  }
+
+  // Загрузка учеников
+  const group = AppState.get("group");
+  if (group) {
+    const students = await Api.getStudents(group.id);
+    AppState.set("students", students);
+  }
+
+  // Регистрация экранов
+  Router.register("kuto", KutoScreen.render);
+  Router.register("student-profile", StudentProfileScreen.render);
+  Router.register("student-packages", StudentPackagesScreen.render);
+  Router.register("event-journal", EventJournalScreen.render);
+
+  // Старт
+  Router.navigate("kuto");
+
+  // Telegram BackButton
+  if (window.Telegram && Telegram.WebApp.BackButton) {
+    Telegram.WebApp.BackButton.onClick(function () {
+      if (Router.canGoBack()) {
+        Router.back();
+      }
+    });
+  }
+})();

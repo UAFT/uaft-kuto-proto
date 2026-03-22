@@ -1,17 +1,222 @@
+/* styles/main.css — UAFT KUTO Global Styles */
 
-:root {{
-  color-scheme: dark;
-}}
-html, body {{
+:root {
+  --bg: #0d0d0f;
+  --bg-card: #1a1a1f;
+  --bg-card-inner: #222228;
+  --bg-elevated: #2a2a30;
+  --text: #e8e8ec;
+  --text-secondary: #8e8e96;
+  --text-muted: #5a5a62;
+  --accent-green: #34c759;
+  --accent-green-bg: rgba(52, 199, 89, 0.12);
+  --accent-yellow: #ffcc00;
+  --accent-yellow-bg: rgba(255, 204, 0, 0.12);
+  --accent-red: #ff3b5c;
+  --accent-red-bg: rgba(255, 59, 92, 0.12);
+  --accent-blue: #0a84ff;
+  --accent-blue-bg: rgba(10, 132, 255, 0.12);
+  --accent-purple: #bf5af2;
+  --accent-purple-bg: rgba(191, 90, 242, 0.12);
+  --border: #2c2c32;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --transition: 0.2s ease;
+}
+
+* {
   margin: 0;
   padding: 0;
-  min-height: 100%;
-  background: #0b1220;
-}}
-body {{
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}}
-button, input {{
-  font: inherit;
-}}
-.hidden {{ display:none !important; }}
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 20px;
+}
+
+.hidden { display: none !important; }
+
+/* ─── Sheet / Bottom Panel ─── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 900;
+  transition: opacity var(--transition);
+}
+.sheet-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  background: var(--bg-card);
+  border-radius: 16px 16px 0 0;
+  z-index: 910;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  animation: sheetUp 0.25s ease;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.sheet-close {
+  font-size: 18px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.sheet-list {
+  padding: 8px 0;
+}
+.sheet-item {
+  padding: 14px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.sheet-item:active {
+  background: var(--bg-elevated);
+}
+.sheet-item.selected {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+/* ─── Sheet Form ─── */
+.sheet-form {
+  padding: 16px;
+}
+.sf-field {
+  margin-bottom: 14px;
+}
+.sf-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sf-field input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
+  padding: 12px 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.sf-field input:focus {
+  border-color: var(--accent-green);
+}
+.sf-gender-seg {
+  display: flex;
+  gap: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.sf-seg {
+  flex: 1;
+  padding: 10px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all var(--transition);
+}
+.sf-seg.active {
+  background: var(--accent-green);
+  color: #000;
+}
+.sf-submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent-green);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  margin-top: 8px;
+}
+.sf-submit:active {
+  opacity: 0.85;
+}
+
+/* ─── Toast ─── */
+#toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg-elevated);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.3s ease;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-success { border-left: 3px solid var(--accent-green); }
+.toast-warn { border-left: 3px solid var(--accent-yellow); }
+.toast-info { border-left: 3px solid var(--accent-blue); }
+.toast-error { border-left: 3px solid var(--accent-red); }
+
+/* ─── Utility colors ─── */
+.val-green { color: var(--accent-green); }
+.val-yellow { color: var(--accent-yellow); }
+.val-red { color: var(--accent-red); }
+.val-blue { color: var(--accent-blue); }

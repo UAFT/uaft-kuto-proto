@@ -1,17 +1,54 @@
-import { navigate } from '../router.js';
-import { appState } from '../state.js';
+// js/screens/student-profile.js — Карточка ученика (placeholder)
 
-export function renderStudentProfilePlaceholder() {
-  const content = document.getElementById('content');
-  const headerSub = document.getElementById('headerSub');
-  const headerActions = document.getElementById('headerActions');
-  const groupStatsBadge = document.getElementById('groupStatsBadge');
-  const globalLockBtn = document.getElementById('globalLockBtn');
-  if (headerSub) headerSub.innerHTML = `${appState.selectedStudentName || 'Карточка ученика'}<span class="subline">Следующий экран этого же mini-app</span>`;
-  if (headerActions) headerActions.innerHTML = `<button class="btn purple small" id="backToKutoFromCard">← Назад в KUTO</button>`;
-  if (groupStatsBadge) groupStatsBadge.textContent = 'Карточка';
-  if (globalLockBtn) { globalLockBtn.textContent = '🔒'; globalLockBtn.classList.remove('unlocked'); }
-  content.innerHTML = `<section class="student-profile-placeholder card"><h2>Карточка ученика</h2><p>Экран будет собран следующим этапом на базе выбранного ученика.</p></section>`;
-  const btn = document.getElementById('backToKutoFromCard');
-  if (btn) btn.onclick = () => navigate('kuto');
-}
+window.StudentProfileScreen = (function () {
+  function render(container, params) {
+    const studentId = params.studentId;
+
+    // Telegram back
+    if (window.Telegram && Telegram.WebApp.BackButton) {
+      Telegram.WebApp.BackButton.show();
+    }
+
+    const st = AppState.get("students").find(s => s.id === studentId);
+
+    container.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "profile-screen";
+
+    const topBar = document.createElement("div");
+    topBar.className = "sd-topbar";
+    topBar.innerHTML = '<button class="sd-back-btn">← Назад</button>';
+    wrap.appendChild(topBar);
+
+    const title = document.createElement("div");
+    title.className = "profile-title";
+    title.textContent = "Карточка ученика";
+    wrap.appendChild(title);
+
+    if (st) {
+      const info = document.createElement("div");
+      info.className = "profile-info";
+      info.innerHTML =
+        '<div class="sd-avatar big" style="background:' + (st.avatarColor || "#666") + '">' +
+          '<span class="sd-initials">' + (st.firstName[0] || "") + (st.lastName[0] || "") + "</span>" +
+        "</div>" +
+        '<div class="profile-name">' + st.lastName + " " + st.firstName + "</div>" +
+        '<div class="profile-row">Телефон: ' + (st.phone || "—") + "</div>" +
+        '<div class="profile-row">Дата рождения: ' + (st.birthDate || "—") + "</div>" +
+        '<div class="profile-row">Пол: ' + (st.gender || "—") + "</div>" +
+        '<div class="profile-placeholder">Полная карточка ученика будет доступна после backend-интеграции</div>';
+      wrap.appendChild(info);
+    } else {
+      wrap.innerHTML += '<div class="profile-placeholder">Ученик не найден</div>';
+    }
+
+    container.appendChild(wrap);
+
+    // Back
+    wrap.querySelector(".sd-back-btn").addEventListener("click", function () {
+      Router.back();
+    });
+  }
+
+  return { render: render };
+})();
