@@ -1,6 +1,3 @@
-import { navigate } from '../router.js';
-import { setSelectedStudent } from '../state.js';
-
 export function initKutoScreen(ctx = {}) {
   const bootstrap = ctx.bootstrap || { role: 'director', permissions: {} };
 
@@ -345,31 +342,14 @@ export function initKutoScreen(ctx = {}) {
   function renderHeaderActions(){
     let html = '';
     if(app.view === 'list'){
-      const addStudentBtn = bootstrap.permissions?.canAddStudentToGroup
-        ? `<div class="header-actions-bottom"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
-        : '';
-      html = `<div class="header-actions-stack">
-        <div class="header-actions-top right-half compact-journal">
-          <button class="btn yellow small" id="headerJournalAction">Журнал событий</button>
-        </div>
-        ${addStudentBtn}
-      </div>`;
-    } else if(app.view === 'student' && currentStudent()){
-      html = `<div class="header-actions-top right-half single-secondary">
-        <button class="btn purple small" id="headerCardAction">Карточка</button>
-      </div>`;
+      html = `<button class="btn green small" id="headerAddAction">Добавить ученика в группу</button>`;
     } else if(app.view === 'packages' && currentStudent()){
-      const addPkgBtn = bootstrap.permissions?.canAddPackage
-        ? `<div class="header-actions-top full"><button class="btn green small" id="headerAddAction">Добавить пакет</button></div>`
-        : '';
-      html = addPkgBtn;
+      html = `<button class="btn green small" id="headerAddAction">Добавить пакет</button>`;
     }
     els.headerActions.innerHTML = html;
-    const addBtn = els.headerActions.querySelector('#headerAddAction');
-    const journalBtn = els.headerActions.querySelector('#headerJournalAction');
-    const cardBtn = els.headerActions.querySelector('#headerCardAction');
-    if(addBtn){
-      addBtn.onclick = () => {
+    const btn = els.headerActions.querySelector('#headerAddAction');
+    if(btn){
+      btn.onclick = () => {
         if(app.view === 'list') openAddToGroupSheet();
         else if(app.view === 'packages'){
           const student = currentStudent();
@@ -377,8 +357,6 @@ export function initKutoScreen(ctx = {}) {
         }
       };
     }
-    if(journalBtn) journalBtn.onclick = () => navigate('event-journal');
-    if(cardBtn) cardBtn.onclick = () => navigate('student-profile');
   }
 
   function render(){
@@ -400,6 +378,7 @@ export function initKutoScreen(ctx = {}) {
       ? `<div class="field"><div class="field-label">Тренер</div><button class="ctx-btn" id="f-trainer"><span class="val">${esc(app.trainer)}</span><span class="chev">▾</span></button></div>`
       : `<div class="field"><div class="field-label">Группа</div><button class="ctx-btn" id="f-group"><span class="val">${esc(app.group)}</span><span class="chev">▾</span></button></div>`;
     els.list.innerHTML = `
+      </div>
       <div class="card">
         <div class="context-grid">
           <div class="field"><div class="field-label">Дисциплина</div><button class="ctx-btn" id="f-discipline"><span class="val">${esc(app.discipline)}</span><span class="chev">▾</span></button></div>
@@ -612,8 +591,6 @@ export function initKutoScreen(ctx = {}) {
     els.list.querySelectorAll('[data-open-student]').forEach(row => row.onclick = (e) => {
       if(e.target.closest('button')) return;
       app.selectedStudentId = e.currentTarget.dataset.openStudent;
-      const selected = getStudent(app.selectedStudentId);
-      setSelectedStudent(app.selectedStudentId, selected?.fullName || '');
       app.view = 'student';
       scrollTop();
       render();
@@ -1155,10 +1132,6 @@ export function initKutoScreen(ctx = {}) {
       return;
     }
     app.view = target;
-    if(target==='student' || target==='progress' || target==='packages'){
-      const selected = currentStudent();
-      if(selected) setSelectedStudent(selected.id, selected.fullName || '');
-    }
     scrollTop();
     render();
   }
