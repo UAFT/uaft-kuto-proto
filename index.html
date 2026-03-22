@@ -279,9 +279,11 @@
   function progressMarkers(student, pkg){
     const total = Number(pkg?.total || 0);
     if(!total) return '';
-    const slots = slotsOfPackage(student, pkg.id);
+    const slotIndexes = slotsOfPackage(student, pkg.id);
     return `<div class="meter-markers">${Array.from({length: total}).map((_,i)=>{
-      const slot=slots[i];
+      const slotIndex = slotIndexes[i];
+      if(slotIndex === undefined || slotIndex === null) return `<div class="m-dot empty">${i+1}</div>`;
+      const slot = getSlot(student, slotIndex);
       if(!slot) return `<div class="m-dot empty">${i+1}</div>`;
       const late = isLate(slot.arrival, slot.start);
       return `<div class="m-dot ${late ? 'late' : 'done'}">${i+1}</div>`;
