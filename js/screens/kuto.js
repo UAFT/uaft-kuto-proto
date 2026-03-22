@@ -47,6 +47,7 @@ export function initKutoScreen(ctx = {}) {
   const els = {
     headerSub: document.getElementById('headerSub'),
     headerActions: document.getElementById('headerActions'),
+    headerJournalSlot: document.getElementById('headerJournalSlot'),
     groupStatsBadge: document.getElementById('groupStatsBadge'),
     globalLockBtn: document.getElementById('globalLockBtn'),
     list: document.getElementById('view-list'),
@@ -343,17 +344,22 @@ export function initKutoScreen(ctx = {}) {
   }
 
   function renderHeaderActions(){
+    /* --- Journal button: always in head-right slot when on list view --- */
+    if(app.view === 'list'){
+      els.headerJournalSlot.innerHTML = `<button class="btn-journal" id="headerJournalAction">📋 Журнал событий</button>`;
+    } else {
+      els.headerJournalSlot.innerHTML = '';
+    }
+    const journalBtn = els.headerJournalSlot.querySelector('#headerJournalAction');
+    if(journalBtn) journalBtn.onclick = () => navigate('event-journal');
+
+    /* --- Other header actions (add student, card, add package) --- */
     let html = '';
     if(app.view === 'list'){
       const addStudentBtn = bootstrap.permissions?.canAddStudentToGroup
         ? `<div class="header-actions-bottom add-student-row"><button class="btn green small" id="headerAddAction">Добавить ученика в группу</button></div>`
         : '';
-      html = `<div class="header-actions-stack list-header-actions">
-        <div class="header-actions-top journal-row">
-          <button class="btn yellow small compact-journal-btn" id="headerJournalAction">Журнал событий</button>
-        </div>
-        ${addStudentBtn}
-      </div>`;
+      html = `<div class="header-actions-stack list-header-actions">${addStudentBtn}</div>`;
     } else if(app.view === 'student' && currentStudent()){
       html = `<div class="header-actions-top right-half single-secondary card-row">
         <button class="btn purple small" id="headerCardAction">Карточка</button>
@@ -367,7 +373,6 @@ export function initKutoScreen(ctx = {}) {
     els.headerActions.dataset.view = app.view;
     els.headerActions.innerHTML = html;
     const addBtn = els.headerActions.querySelector('#headerAddAction');
-    const journalBtn = els.headerActions.querySelector('#headerJournalAction');
     const cardBtn = els.headerActions.querySelector('#headerCardAction');
     if(addBtn){
       addBtn.onclick = () => {
@@ -378,7 +383,6 @@ export function initKutoScreen(ctx = {}) {
         }
       };
     }
-    if(journalBtn) journalBtn.onclick = () => navigate('event-journal');
     if(cardBtn) cardBtn.onclick = () => navigate('student-profile');
   }
 
@@ -437,9 +441,9 @@ export function initKutoScreen(ctx = {}) {
             <span>${esc(student.packageLabel)}</span>
           </div>
           <div class="row-kpis">
-            <div class="row-kpi"><span class="kpi-label">Оплачено:</span><span class="kpi-value ${paidCls}">${money(student.paid)}</span></div>
-            <div class="row-kpi"><span class="kpi-label">Долг:</span><span class="kpi-value debt-val">${money(student.debt)}</span></div>
-            <div class="row-kpi"><span class="kpi-label">Прогресс:</span><span class="kpi-value prog-val">${esc(student.progress)}</span></div>
+            <div>Оплачено: <span class="${paidCls}">${money(student.paid)}</span></div>
+            <div>Долг: <span class="debt-val">${money(student.debt)}</span></div>
+            <div>Прогресс: <span class="prog-val">${esc(student.progress)}</span></div>
           </div>
         </div>
         <div class="row-side">
